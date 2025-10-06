@@ -25,10 +25,10 @@ import { AddItemDialog } from "@/components/inventory/add-item-dialog";
 import { useState } from "react";
 
 const initialInventoryItems = [
-    { id: '1', name: 'Premium Website Template', cost: 5000, price: 29900, quantity: 100 },
-    { id: '2', name: 'Consulting Hour', cost: 2000, price: 15000, quantity: 500 },
-    { id: '3', name: 'Logo Design Package', cost: 10000, price: 50000, quantity: 50 },
-    { id: '4', name: 'Monthly SEO Service', cost: 20000, price: 75000, quantity: 20 },
+    { id: '1', name: 'Premium Website Template', cost: 5000, price: 29900, quantity: 100, imageUrl: 'https://picsum.photos/seed/webtemplate/200/200' },
+    { id: '2', name: 'Consulting Hour', cost: 2000, price: 15000, quantity: 500, imageUrl: 'https://picsum.photos/seed/consulting/200/200' },
+    { id: '3', name: 'Logo Design Package', cost: 10000, price: 50000, quantity: 50, imageUrl: 'https://picsum.photos/seed/logodesign/200/200' },
+    { id: '4', name: 'Monthly SEO Service', cost: 20000, price: 75000, quantity: 20, imageUrl: 'https://picsum.photos/seed/seo/200/200' },
 ];
 
 export default function InventoryPage() {
@@ -127,7 +127,7 @@ export default function InventoryPage() {
                 <Table>
                     <TableHeader>
                     <TableRow>
-                        <TableHead>Name</TableHead>
+                        <TableHead>Item</TableHead>
                         <TableHead className="text-right">Cost</TableHead>
                         <TableHead className="text-right">Price</TableHead>
                         <TableHead className="text-right">Quantity</TableHead>
@@ -137,7 +137,18 @@ export default function InventoryPage() {
                     <TableBody>
                     {inventoryItems.map((item) => (
                         <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell className="font-medium">
+                                <div className="flex items-center gap-3">
+                                    <Image
+                                        src={item.imageUrl || "https://picsum.photos/seed/placeholder/40/40"}
+                                        alt={item.name}
+                                        width={40}
+                                        height={40}
+                                        className="rounded-md object-cover"
+                                    />
+                                    <span>{item.name}</span>
+                                </div>
+                            </TableCell>
                             <TableCell className="text-right">{formatCurrency(item.cost, 'NGN')}</TableCell>
                             <TableCell className="text-right">{formatCurrency(item.price, 'NGN')}</TableCell>
                             <TableCell className="text-right">{item.quantity}</TableCell>

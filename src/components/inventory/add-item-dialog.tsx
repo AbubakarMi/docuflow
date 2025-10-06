@@ -24,6 +24,7 @@ const itemSchema = z.object({
   cost: z.coerce.number().min(0, "Cost must be a positive number"),
   price: z.coerce.number().min(0, "Price must be a positive number"),
   quantity: z.coerce.number().int().min(0, "Quantity must be a positive integer"),
+  imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
 });
 
 type ItemFormValues = z.infer<typeof itemSchema>;
@@ -43,6 +44,7 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
       cost: 0,
       price: 0,
       quantity: 1,
+      imageUrl: "",
     },
   });
 
@@ -71,6 +73,11 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
             <Label htmlFor="name">Name</Label>
             <Input id="name" {...form.register("name")} />
             {form.formState.errors.name && <p className="text-red-500 text-xs">{form.formState.errors.name.message}</p>}
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="imageUrl">Image URL</Label>
+            <Input id="imageUrl" {...form.register("imageUrl")} placeholder="https://example.com/image.png"/>
+            {form.formState.errors.imageUrl && <p className="text-red-500 text-xs">{form.formState.errors.imageUrl.message}</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
