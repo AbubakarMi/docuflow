@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -17,12 +16,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { MoreVertical, PlusCircle } from "lucide-react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { formatCurrency } from "@/lib/utils";
 import { AddItemDialog } from "@/components/inventory/add-item-dialog";
 import { useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EditItemDialog } from "@/components/inventory/edit-item-dialog";
 
 const initialInventoryItems = [
     { id: '1', name: 'Premium Website Template', cost: 5000, price: 29900, quantity: 100, imageUrl: 'https://picsum.photos/seed/webtemplate/200/200' },
@@ -31,8 +32,12 @@ const initialInventoryItems = [
     { id: '4', name: 'Monthly SEO Service', cost: 20000, price: 75000, quantity: 20, imageUrl: 'https://picsum.photos/seed/seo/200/200' },
 ];
 
+type InventoryItem = typeof initialInventoryItems[0];
+
 export default function InventoryPage() {
   const [inventoryItems, setInventoryItems] = useState(initialInventoryItems);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+
   const isEmpty = inventoryItems.length === 0;
   const emptyInventoryImage = PlaceHolderImages.find(p => p.id === 'inventory-empty');
 
@@ -44,9 +49,14 @@ export default function InventoryPage() {
 
   const profit = totals.revenue - totals.cost;
 
-  const handleAddItem = (item: Omit<typeof initialInventoryItems[0], 'id'>) => {
+  const handleAddItem = (item: Omit<InventoryItem, 'id'>) => {
     setInventoryItems(prev => [...prev, { ...item, id: String(prev.length + 1) }]);
   };
+
+  const handleUpdateItem = (updatedItem: InventoryItem) => {
+    setInventoryItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+    setEditingItem(null);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -132,6 +142,7 @@ export default function InventoryPage() {
                         <TableHead className="text-right">Price</TableHead>
                         <TableHead className="text-right">Quantity</TableHead>
                         <TableHead className="text-right">Profit / Unit</TableHead>
+                        <TableHead className="text-right w-[50px]">Actions</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -155,6 +166,21 @@ export default function InventoryPage() {
                             <TableCell className={`text-right font-medium ${item.price - item.cost >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                                 {formatCurrency(item.price - item.cost, 'NGN')}
                             </TableCell>
+                            <TableCell className="text-right">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => setEditingItem(item)}>
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
                         </TableRow>
                     ))}
                     </TableBody>
@@ -162,6 +188,14 @@ export default function InventoryPage() {
             )}
         </CardContent>
       </Card>
+      
+      {editingItem && (
+        <EditItemDialog
+          item={editingItem}
+          onUpdateItem={handleUpdateItem}
+          onOpenChange={(isOpen) => !isOpen && setEditingItem(null)}
+        />
+      )}
     </div>
   );
 }
