@@ -17,17 +17,14 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Package } from "lucide-react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { formatCurrency } from "@/lib/utils";
 
 const inventoryItems = [
-    { id: '1', name: 'Premium Website Template', cost: 50, price: 299, quantity: 100 },
-    { id: '2', name: 'Consulting Hour', cost: 20, price: 150, quantity: 500 },
-    { id: '3', name: 'Logo Design Package', cost: 100, price: 500, quantity: 50 },
-    { id: '4', name: 'Monthly SEO Service', cost: 200, price: 750, quantity: 20 },
+    { id: '1', name: 'Premium Website Template', cost: 5000, price: 29900, quantity: 100 },
+    { id: '2', name: 'Consulting Hour', cost: 2000, price: 15000, quantity: 500 },
+    { id: '3', name: 'Logo Design Package', cost: 10000, price: 50000, quantity: 50 },
+    { id: '4', name: 'Monthly SEO Service', cost: 20000, price: 75000, quantity: 20 },
 ];
-
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-}
 
 export default function InventoryPage() {
   const isEmpty = inventoryItems.length === 0;
@@ -61,7 +58,7 @@ export default function InventoryPage() {
                 <CardTitle>Total Potential Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(totals.revenue)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(totals.revenue, 'NGN')}</div>
             </CardContent>
         </Card>
         <Card>
@@ -69,7 +66,7 @@ export default function InventoryPage() {
                 <CardTitle>Total Cost</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(totals.cost)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(totals.cost, 'NGN')}</div>
             </CardContent>
         </Card>
         <Card>
@@ -77,7 +74,7 @@ export default function InventoryPage() {
                 <CardTitle>Total Potential Profit</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className={`text-2xl font-bold ${profit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{formatCurrency(profit)}</div>
+                <div className={`text-2xl font-bold ${profit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{formatCurrency(profit, 'NGN')}</div>
             </CardContent>
         </Card>
       </div>
@@ -127,11 +124,11 @@ export default function InventoryPage() {
                     {inventoryItems.map((item) => (
                         <TableRow key={item.id}>
                             <TableCell className="font-medium">{item.name}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.cost, 'NGN')}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.price, 'NGN')}</TableCell>
                             <TableCell className="text-right">{item.quantity}</TableCell>
                             <TableCell className={`text-right font-medium ${item.price - item.cost >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                {formatCurrency(item.price - item.cost)}
+                                {formatCurrency(item.price - item.cost, 'NGN')}
                             </TableCell>
                         </TableRow>
                     ))}

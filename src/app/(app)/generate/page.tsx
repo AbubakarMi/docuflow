@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatCurrency } from "@/lib/utils";
 import { PlusCircle, Trash2 } from "lucide-react";
 
 export default function GeneratePage() {
@@ -110,7 +111,7 @@ export default function GeneratePage() {
                 <TableCell>
                   <Input type="number" placeholder="100.00" className="text-right" />
                 </TableCell>
-                <TableCell className="text-right font-medium">$100.00</TableCell>
+                <TableCell className="text-right font-medium">{formatCurrency(10000, 'NGN')}</TableCell>
                 <TableCell>
                   <Button variant="ghost" size="icon">
                     <Trash2 className="h-4 w-4" />
@@ -129,15 +130,15 @@ export default function GeneratePage() {
             <div className="w-full max-w-sm space-y-4">
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium">$100.00</span>
+                    <span className="font-medium">{formatCurrency(10000, 'NGN')}</span>
                 </div>
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Tax (10%)</span>
-                    <span className="font-medium">$10.00</span>
+                    <span className="font-medium">{formatCurrency(1000, 'NGN')}</span>
                 </div>
                 <div className="flex justify-between border-t pt-4">
                     <span className="text-lg font-bold">Total</span>
-                    <span className="text-lg font-bold">$110.00</span>
+                    <span className="text-lg font-bold">{formatCurrency(11000, 'NGN')}</span>
                 </div>
             </div>
         </div>

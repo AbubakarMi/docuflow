@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -5,8 +6,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { DollarSign, FileText, Package, TrendingUp } from "lucide-react"
+import { FileText, Package, TrendingUp } from "lucide-react"
 import { Overview } from "@/components/dashboard/overview"
+import { formatCurrency } from "@/lib/utils";
+
+const NairaIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground">
+    <path d="M6 18h12M6 12h12M6 6h12M18 6l-12 12M6 18l12-12"/>
+  </svg>
+);
+
 
 export default function DashboardPage() {
   return (
@@ -15,10 +24,10 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <NairaIcon />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-2xl font-bold">{formatCurrency(4523189, 'NGN')}</div>
             <p className="text-xs text-muted-foreground">
               +20.1% from last month
             </p>
@@ -27,10 +36,10 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <NairaIcon />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$21,112.45</div>
+            <div className="text-2xl font-bold">{formatCurrency(2111245, 'NGN')}</div>
             <p className="text-xs text-muted-foreground">
               +18.1% from last month
             </p>
@@ -42,7 +51,7 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-500">$24,119.44</div>
+            <div className="text-2xl font-bold text-emerald-500">{formatCurrency(2411944, 'NGN')}</div>
             <p className="text-xs text-muted-foreground">
               +22.3% from last month
             </p>
