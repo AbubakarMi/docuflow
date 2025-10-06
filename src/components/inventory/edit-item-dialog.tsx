@@ -24,6 +24,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const itemSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Name is required"),
+  category: z.string().min(1, "Category is required"),
   cost: z.coerce.number().min(0, "Cost must be a positive number"),
   price: z.coerce.number().min(0, "Price must be a positive number"),
   quantity: z.coerce.number().int().min(0, "Quantity must be a positive integer"),
@@ -196,27 +197,34 @@ export function EditItemDialog({ item, onUpdateItem, onOpenChange }: EditItemDia
             {form.formState.errors.imageUrl && <p className="text-destructive text-xs">{form.formState.errors.imageUrl.message}</p>}
 
           <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" {...form.register("name")} placeholder="e.g., Premium Website Template" />
-                {form.formState.errors.name && <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" {...form.register("name")} />
+                  {form.formState.errors.name && <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Input id="category" {...form.register("category")} />
+                  {form.formState.errors.category && <p className="text-destructive text-xs">{form.formState.errors.category.message}</p>}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="cost">Cost (₦)</Label>
-                  <Input id="cost" type="number" {...form.register("cost")} placeholder="e.g., 5000" />
+                  <Input id="cost" type="number" {...form.register("cost")} />
                    {form.formState.errors.cost && <p className="text-destructive text-xs">{form.formState.errors.cost.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="price">Price (₦)</Label>
-                  <Input id="price" type="number" {...form.register("price")} placeholder="e.g., 29900" />
+                  <Input id="price" type="number" {...form.register("price")} />
                   {form.formState.errors.price && <p className="text-destructive text-xs">{form.formState.errors.price.message}</p>}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity</Label>
-                <Input id="quantity" type="number" {...form.register("quantity")} placeholder="e.g., 100"/>
+                <Input id="quantity" type="number" {...form.register("quantity")} />
                 {form.formState.errors.quantity && <p className="text-destructive text-xs">{form.formState.errors.quantity.message}</p>}
               </div>
           </div>
