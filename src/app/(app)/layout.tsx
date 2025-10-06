@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
-import { ClientAuthGuard } from "./client-auth-guard";
 import { LayoutDashboard, FileText, Box, Settings, ChevronsUpDown, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -28,7 +27,6 @@ const menuItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClientAuthGuard>
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
@@ -81,6 +79,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <main className="flex-1 p-4 lg:p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>
-    </ClientAuthGuard>
   );
 }

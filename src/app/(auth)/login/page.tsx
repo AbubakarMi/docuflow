@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +17,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/firebase";
 import { Chrome } from "lucide-react";
 
 const formSchema = z.object({
@@ -29,7 +27,6 @@ const formSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,32 +37,20 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!auth) return;
-    try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push("/dashboard");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message,
-      });
-    }
+    console.log(values);
+    toast({
+      title: "Login Submitted",
+      description: "This is a placeholder. Backend not connected.",
+    });
+    router.push("/dashboard");
   }
 
   async function handleGoogleSignIn() {
-    if (!auth) return;
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      router.push("/dashboard");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.message,
-      });
-    }
+    toast({
+      title: "Google Sign-In",
+      description: "This is a placeholder. Backend not connected.",
+    });
+    router.push("/dashboard");
   }
 
   return (
