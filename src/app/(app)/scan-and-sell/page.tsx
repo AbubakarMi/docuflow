@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScanLine, Sparkles, Trash2, Plus, Minus } from "lucide-react";
+import { ScanLine, Sparkles, Trash2, Plus, Minus, Video, VideoOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { suggestItemDetailsFromImage } from "@/ai/flows/suggest-item-details-from-image";
 import { formatCurrency } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 // Mock inventory data - in a real app, this would come from a database
 const mockInventory = [
@@ -27,67 +29,86 @@ type CartItem = {
     quantity: number;
 };
 
+const SCAN_INTERVAL = 3000; // Scan every 3 seconds
+
 export default function ScanAndSellPage() {
     const { toast } = useToast();
     const router = useRouter();
     const [cart, setCart] = useState<CartItem[]>([]);
     const [isScanning, setIsScanning] = useState(false);
+    const [isCameraOn, setIsCameraOn] = useState(true);
+    const [lastScannedId, setLastScannedId] = useState<string | null>(null);
+    const [scanStatus, setScanStatus] = useState('Ready to scan...');
     const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const scannerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    useEffect(() => {
-        const getCameraPermission = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                setHasCameraPermission(true);
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                }
-            } catch (error) {
-                console.error("Error accessing camera:", error);
-                setHasCameraPermission(false);
-            }
-        };
-
-        getCameraPermission();
-
-        return () => {
-            stopCamera();
-        };
-    }, []);
-
-    const stopCamera = () => {
+    const stopCamera = useCallback(() => {
         if (videoRef.current && videoRef.current.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
             videoRef.current.srcObject = null;
         }
-    };
+        if (scannerIntervalRef.current) {
+            clearInterval(scannerIntervalRef.current);
+            scannerIntervalRef.current = null;
+        }
+        setHasCameraPermission(false);
+    }, []);
 
-    const captureFrame = () => {
-        if (videoRef.current && canvasRef.current) {
-            const video = videoRef.current;
-            const canvas = canvasRef.current;
+    const startCamera = useCallback(async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            setHasCameraPermission(true);
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        } catch (error) {
+            console.error("Error accessing camera:", error);
+            setHasCameraPermission(false);
+            toast({
+                variant: 'destructive',
+                title: 'Camera Access Denied',
+                description: 'Please enable camera permissions in your browser settings to use this feature.',
+            });
+        }
+    }, [toast]);
+    
+    
+    useEffect(() => {
+        if (isCameraOn) {
+            startCamera();
+        } else {
+            stopCamera();
+        }
+
+        return () => {
+            stopCamera();
+        };
+    }, [isCameraOn, startCamera, stopCamera]);
+
+
+    const handleScan = useCallback(async () => {
+        if (!videoRef.current || videoRef.current.paused || videoRef.current.ended || !isCameraOn) {
+            return;
+        }
+        
+        setIsScanning(true);
+        setScanStatus('Scanning...');
+        
+        const canvas = canvasRef.current;
+        const video = videoRef.current;
+        if (canvas && video) {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const context = canvas.getContext("2d");
-            if (context) {
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                return canvas.toDataURL("image/jpeg");
-            }
-        }
-        return null;
-    }
+            context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL("image/jpeg");
 
-    const handleScan = async () => {
-        const dataUrl = captureFrame();
-        if (dataUrl) {
-            setIsScanning(true);
             try {
                 const result = await suggestItemDetailsFromImage({ imageDataUri: dataUrl });
                 
-                // Fuzzy search for item in mock inventory
                 const itemNameLower = result.itemName.toLowerCase();
                 const foundItem = mockInventory.find(invItem => 
                     invItem.name.toLowerCase().includes(itemNameLower) || 
@@ -95,30 +116,53 @@ export default function ScanAndSellPage() {
                 );
 
                 if (foundItem) {
-                    addToCart(foundItem);
-                    toast({
-                        title: "Item Added",
-                        description: `${foundItem.name} added to cart.`,
-                    });
+                    if (foundItem.id !== lastScannedId) {
+                        addToCart(foundItem);
+                        toast({
+                            title: "Item Added",
+                            description: `${foundItem.name} added to cart.`,
+                        });
+                        setLastScannedId(foundItem.id);
+                    }
+                    setScanStatus(`Detected: ${foundItem.name}`);
                 } else {
-                     toast({
-                        variant: "destructive",
-                        title: "Item Not Found",
-                        description: `Could not find "${result.itemName}" in inventory.`,
-                    });
+                     setScanStatus(`Item not found: "${result.itemName}"`);
                 }
 
             } catch (error) {
-                toast({
-                    variant: "destructive",
-                    title: "Scan Failed",
-                    description: "Could not identify the item. Please try again.",
-                });
+                setScanStatus('Could not identify item. Try again.');
             } finally {
                 setIsScanning(false);
+                // Reset last scanned after a delay to allow re-scanning the same item
+                setTimeout(() => setLastScannedId(null), SCAN_INTERVAL);
+            }
+        } else {
+            setIsScanning(false);
+            setScanStatus('Scanner not ready.');
+        }
+    }, [isCameraOn, lastScannedId, toast]);
+
+    useEffect(() => {
+        if (isCameraOn && hasCameraPermission && !scannerIntervalRef.current) {
+            scannerIntervalRef.current = setInterval(() => {
+                if (!isScanning) {
+                    handleScan();
+                }
+            }, SCAN_INTERVAL);
+        } else if (!isCameraOn || !hasCameraPermission) {
+            if (scannerIntervalRef.current) {
+                clearInterval(scannerIntervalRef.current);
+                scannerIntervalRef.current = null;
             }
         }
-    };
+
+        return () => {
+            if (scannerIntervalRef.current) {
+                clearInterval(scannerIntervalRef.current);
+            }
+        };
+    }, [isCameraOn, hasCameraPermission, isScanning, handleScan]);
+
 
     const addToCart = (item: typeof mockInventory[0]) => {
         setCart(prevCart => {
@@ -162,42 +206,38 @@ export default function ScanAndSellPage() {
     return (
         <div className="flex flex-col gap-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Scan & Sell</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Scan &amp; Sell</h1>
                 <p className="text-muted-foreground">
-                    Scan items to add them to the cart and generate an invoice.
+                    Enable the camera to automatically scan items and add them to the cart.
                 </p>
             </div>
             <div className="grid md:grid-cols-2 gap-8">
                 <Card>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Scanner</CardTitle>
+                         <div className="flex items-center space-x-2">
+                            <Switch id="camera-toggle" checked={isCameraOn} onCheckedChange={setIsCameraOn} />
+                            <Label htmlFor="camera-toggle">{isCameraOn ? 'On' : 'Off'}</Label>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="relative aspect-video w-full bg-muted rounded-lg border border-dashed flex items-center justify-center overflow-hidden">
-                            <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+                            <video ref={videoRef} className={`w-full h-full object-cover ${!isCameraOn && 'hidden'}`} autoPlay muted playsInline />
+                            {!isCameraOn && <VideoOff className="h-16 w-16 text-muted-foreground" />}
+                            {isCameraOn && hasCameraPermission === false && (
+                               <Alert variant="destructive" className="m-4">
+                                    <AlertTitle>Camera Access Denied</AlertTitle>
+                                    <AlertDescription>
+                                        Enable camera permissions to use the scanner.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
                             <canvas ref={canvasRef} className="hidden"></canvas>
                         </div>
-                        {hasCameraPermission === false && (
-                            <Alert variant="destructive" className="mt-4">
-                                <AlertTitle>Camera Access Denied</AlertTitle>
-                                <AlertDescription>
-                                Please enable camera permissions in your browser settings to use the scanner.
-                                </AlertDescription>
-                            </Alert>
-                        )}
-                        <Button
-                            onClick={handleScan}
-                            disabled={!hasCameraPermission || isScanning}
-                            className="w-full mt-4"
-                            size="lg"
-                        >
-                            {isScanning ? (
-                                <Sparkles className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <ScanLine className="mr-2 h-4 w-4" />
-                            )}
-                            {isScanning ? "Scanning..." : "Scan Item"}
-                        </Button>
+                        <div className="mt-4 text-center text-sm text-muted-foreground min-h-[20px] flex items-center justify-center gap-2">
+                          {isScanning && <Sparkles className="h-4 w-4 animate-spin"/>}
+                          <span>{scanStatus}</span>
+                        </div>
                     </CardContent>
                 </Card>
 
