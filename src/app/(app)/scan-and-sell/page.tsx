@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScanLine, Sparkles, Trash2, Plus, Minus, Video, VideoOff } from "lucide-react";
+import { ScanLine, Sparkles, Trash2, Plus, Minus, VideoOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { suggestItemDetailsFromImage } from "@/ai/flows/suggest-item-details-from-image";
 import { formatCurrency } from '@/lib/utils';
@@ -29,7 +29,8 @@ type CartItem = {
     quantity: number;
 };
 
-const SCAN_INTERVAL = 3000; // Scan every 3 seconds
+const SCAN_INTERVAL = 2500; // Scan every 2.5 seconds
+const RESCAN_DELAY = 3000; // Time before the same item can be scanned again
 
 export default function ScanAndSellPage() {
     const { toast } = useToast();
@@ -54,28 +55,35 @@ export default function ScanAndSellPage() {
             clearInterval(scannerIntervalRef.current);
             scannerIntervalRef.current = null;
         }
-        setHasCameraPermission(false);
+        setHasCameraPermission(null);
+        setScanStatus('Camera is off.');
     }, []);
 
     const startCamera = useCallback(async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            setHasCameraPermission(true);
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                setHasCameraPermission(true);
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                }
+                setScanStatus('Camera enabled. Ready to scan...');
+            } catch (error) {
+                console.error("Error accessing camera:", error);
+                setHasCameraPermission(false);
+                setScanStatus('Camera permission denied.');
+                toast({
+                    variant: 'destructive',
+                    title: 'Camera Access Denied',
+                    description: 'Please enable camera permissions in your browser settings to use this feature.',
+                });
             }
-        } catch (error) {
-            console.error("Error accessing camera:", error);
+        } else {
             setHasCameraPermission(false);
-            toast({
-                variant: 'destructive',
-                title: 'Camera Access Denied',
-                description: 'Please enable camera permissions in your browser settings to use this feature.',
-            });
+            setScanStatus('Camera not supported.');
         }
     }, [toast]);
-    
-    
+
     useEffect(() => {
         if (isCameraOn) {
             startCamera();
@@ -90,7 +98,7 @@ export default function ScanAndSellPage() {
 
 
     const handleScan = useCallback(async () => {
-        if (!videoRef.current || videoRef.current.paused || videoRef.current.ended || !isCameraOn) {
+        if (!videoRef.current || videoRef.current.paused || videoRef.current.ended || !isCameraOn || !hasCameraPermission) {
             return;
         }
         
@@ -103,7 +111,11 @@ export default function ScanAndSellPage() {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const context = canvas.getContext("2d");
-            context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+            if (!context) {
+                 setIsScanning(false);
+                 return;
+            }
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
             const dataUrl = canvas.toDataURL("image/jpeg");
 
             try {
@@ -118,38 +130,36 @@ export default function ScanAndSellPage() {
                 if (foundItem) {
                     if (foundItem.id !== lastScannedId) {
                         addToCart(foundItem);
-                        toast({
-                            title: "Item Added",
-                            description: `${foundItem.name} added to cart.`,
-                        });
                         setLastScannedId(foundItem.id);
+                        setScanStatus(`Added: ${foundItem.name}`);
+                        setTimeout(() => setLastScannedId(null), RESCAN_DELAY);
+                    } else {
+                        setScanStatus(`Detected: ${foundItem.name} (already scanned)`);
                     }
-                    setScanStatus(`Detected: ${foundItem.name}`);
                 } else {
                      setScanStatus(`Item not found: "${result.itemName}"`);
                 }
 
             } catch (error) {
-                setScanStatus('Could not identify item. Try again.');
+                setScanStatus('Could not identify item. Trying again.');
             } finally {
                 setIsScanning(false);
-                // Reset last scanned after a delay to allow re-scanning the same item
-                setTimeout(() => setLastScannedId(null), SCAN_INTERVAL);
             }
         } else {
             setIsScanning(false);
-            setScanStatus('Scanner not ready.');
         }
-    }, [isCameraOn, lastScannedId, toast]);
+    }, [isCameraOn, hasCameraPermission, lastScannedId]);
 
     useEffect(() => {
-        if (isCameraOn && hasCameraPermission && !scannerIntervalRef.current) {
-            scannerIntervalRef.current = setInterval(() => {
-                if (!isScanning) {
-                    handleScan();
-                }
-            }, SCAN_INTERVAL);
-        } else if (!isCameraOn || !hasCameraPermission) {
+        if (isCameraOn && hasCameraPermission) {
+            if (!scannerIntervalRef.current) {
+                scannerIntervalRef.current = setInterval(() => {
+                    if (!isScanning) {
+                        handleScan();
+                    }
+                }, SCAN_INTERVAL);
+            }
+        } else {
             if (scannerIntervalRef.current) {
                 clearInterval(scannerIntervalRef.current);
                 scannerIntervalRef.current = null;
@@ -176,6 +186,10 @@ export default function ScanAndSellPage() {
             } else {
                 return [...prevCart, { id: item.id, name: item.name, price: item.price, quantity: 1 }];
             }
+        });
+        toast({
+            title: "Item Added",
+            description: `${item.name} added to cart.`,
         });
     };
 
@@ -245,10 +259,10 @@ export default function ScanAndSellPage() {
                     <CardHeader>
                         <CardTitle>Current Sale</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex flex-col h-full">
+                    <CardContent className="flex flex-col h-[calc(100%-76px)]">
                         {cart.length === 0 ? (
                             <div className="flex-1 flex items-center justify-center text-center">
-                                <p className="text-muted-foreground">Scan an item to begin.</p>
+                                <p className="text-muted-foreground">Scanned items will appear here.</p>
                             </div>
                         ) : (
                             <div className="flex-1 overflow-y-auto -mx-6 px-6">
@@ -310,4 +324,6 @@ export default function ScanAndSellPage() {
         </div>
     );
 }
+    
+
     
