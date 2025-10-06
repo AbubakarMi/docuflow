@@ -147,81 +147,85 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add New Item</DialogTitle>
           <DialogDescription>
             Add a new product or service to your inventory.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" {...form.register("name")} />
-            {form.formState.errors.name && <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Image</Label>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" /> Upload File</TabsTrigger>
-                <TabsTrigger value="camera"><Camera className="mr-2 h-4 w-4"/> Use Camera</TabsTrigger>
-              </TabsList>
-              <TabsContent value="upload">
-                <div className="mt-2 flex flex-col items-center gap-4 rounded-lg border border-dashed p-4">
-                   {imagePreview ? (
-                        <Image src={imagePreview} alt="Image preview" width={128} height={128} className="rounded-md object-cover" />
-                    ) : (
-                        <div className="flex flex-col items-center text-center text-muted-foreground">
-                            <Upload className="h-10 w-10" />
-                            <p className="mt-2 text-sm">Upload an image for your item</p>
-                        </div>
-                    )}
-                  <Input id="picture" type="file" accept="image/*" onChange={handleFileChange} className="w-full" />
-                </div>
-              </TabsContent>
-              <TabsContent value="camera">
-                <div className="mt-2 flex flex-col items-center gap-4 rounded-lg border border-dashed p-4">
-                   <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
-                    {hasCameraPermission === false && (
-                      <Alert variant="destructive">
-                        <AlertTitle>Camera Access Required</AlertTitle>
-                        <AlertDescription>
-                          Please allow camera access to use this feature.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                   <Button type="button" onClick={handleCapture} disabled={!hasCameraPermission}>
-                        <Camera className="mr-2 h-4 w-4" />
-                        Take Picture
-                    </Button>
-                </div>
+              <div className="relative aspect-video w-full bg-muted rounded-lg border border-dashed flex items-center justify-center overflow-hidden">
+                {activeTab === 'upload' && imagePreview && (
+                    <Image src={imagePreview} alt="Image preview" layout="fill" className="object-cover" />
+                )}
+                {activeTab === 'upload' && !imagePreview && (
+                    <div className="flex flex-col items-center text-center text-muted-foreground p-4">
+                        <Upload className="h-10 w-10 mb-2" />
+                        <p className="text-sm font-medium">Upload an image</p>
+                        <p className="text-xs">Your item's visual identity</p>
+                    </div>
+                )}
+                {activeTab === 'camera' && (
+                    <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+                )}
                  <canvas ref={canvasRef} className="hidden"></canvas>
+              </div>
+
+              <TabsList className="grid w-full grid-cols-2 mt-4">
+                <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" /> Upload</TabsTrigger>
+                <TabsTrigger value="camera"><Camera className="mr-2 h-4 w-4"/> Camera</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="upload" className="mt-4">
+                <Input id="picture" type="file" accept="image/*" onChange={handleFileChange} />
+              </TabsContent>
+              <TabsContent value="camera" className="mt-4">
+                {hasCameraPermission === false && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTitle>Camera Access Required</AlertTitle>
+                    <AlertDescription>
+                      Please allow camera access to use this feature.
+                    </AlertDescription>
+                  </Alert>
+                )}
+               <Button type="button" onClick={handleCapture} disabled={!hasCameraPermission} className="w-full">
+                    <Camera className="mr-2 h-4 w-4" />
+                    Take Picture
+                </Button>
               </TabsContent>
             </Tabs>
-             {form.formState.errors.imageUrl && <p className="text-destructive text-xs">{form.formState.errors.imageUrl.message}</p>}
-          </div>
+            {form.formState.errors.imageUrl && <p className="text-destructive text-xs">{form.formState.errors.imageUrl.message}</p>}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="cost">Cost (₦)</Label>
-              <Input id="cost" type="number" {...form.register("cost")} />
-               {form.formState.errors.cost && <p className="text-destructive text-xs">{form.formState.errors.cost.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">Price (₦)</Label>
-              <Input id="price" type="number" {...form.register("price")} />
-              {form.formState.errors.price && <p className="text-destructive text-xs">{form.formState.errors.price.message}</p>}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity</Label>
-            <Input id="quantity" type="number" {...form.register("quantity")} />
-            {form.formState.errors.quantity && <p className="text-destructive text-xs">{form.formState.errors.quantity.message}</p>}
+          <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" {...form.register("name")} placeholder="e.g., Premium Website Template" />
+                {form.formState.errors.name && <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cost">Cost (₦)</Label>
+                  <Input id="cost" type="number" {...form.register("cost")} placeholder="e.g., 5000" />
+                   {form.formState.errors.cost && <p className="text-destructive text-xs">{form.formState.errors.cost.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price (₦)</Label>
+                  <Input id="price" type="number" {...form.register("price")} placeholder="e.g., 29900" />
+                  {form.formState.errors.price && <p className="text-destructive text-xs">{form.formState.errors.price.message}</p>}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input id="quantity" type="number" {...form.register("quantity")} placeholder="e.g., 100"/>
+                {form.formState.errors.quantity && <p className="text-destructive text-xs">{form.formState.errors.quantity.message}</p>}
+              </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Item</Button>
+            <Button type="submit" className="w-full">Add Item to Inventory</Button>
           </DialogFooter>
         </form>
       </DialogContent>
