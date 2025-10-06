@@ -20,13 +20,14 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
 import { PlusCircle, Sparkles, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { generateInvoiceFromText } from "@/ai/flows/generate-invoice-from-text";
+import { useSearchParams } from "next/navigation";
 
 const formSchema = z.object({
   fromName: z.string().optional(),
@@ -45,8 +46,9 @@ const formSchema = z.object({
 
 type InvoiceFormValues = z.infer<typeof formSchema>;
 
-export default function GeneratePage() {
+function GeneratePageContent() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -68,6 +70,20 @@ export default function GeneratePage() {
     control: form.control,
     name: "items",
   });
+
+  useEffect(() => {
+    const itemsParam = searchParams.get('items');
+    if (itemsParam) {
+      try {
+        const parsedItems = JSON.parse(itemsParam);
+        if (Array.isArray(parsedItems)) {
+          replace(parsedItems);
+        }
+      } catch (error) {
+        console.error("Failed to parse items from URL", error);
+      }
+    }
+  }, [searchParams, replace]);
 
   const handleGenerateWithAI = async () => {
     if (!aiPrompt) return;
@@ -269,5 +285,12 @@ export default function GeneratePage() {
         <Button onClick={() => handleAction('PDF')}>Generate PDF</Button>
       </div>
     </div>
+  );
+}
+
+
+export default function GeneratePage() {
+  return (
+    <GeneratePageContent />
   );
 }

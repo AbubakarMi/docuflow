@@ -13,14 +13,16 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
-import { LayoutDashboard, FileText, Box, Settings, ChevronsUpDown, Users } from "lucide-react";
+import { LayoutDashboard, FileText, Box, Settings, ChevronsUpDown, Users, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/generate", label: "Generate", icon: FileText },
   { href: "/templates", label: "Templates", icon: FileText },
   { href: "/inventory", label: "Inventory", icon: Box },
+  { href: "/scan-and-sell", label: "Scan & Sell", icon: ScanLine },
   { href: "/users", label: "Users", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
