@@ -29,8 +29,7 @@ type CartItem = {
     quantity: number;
 };
 
-const SCAN_INTERVAL = 2500; // Scan every 2.5 seconds
-const RESCAN_DELAY = 3000; // Time before the same item can be scanned again
+const RESCAN_DELAY = 2000; // Time before the same item can be scanned again
 
 export default function ScanAndSellPage() {
     const { toast } = useToast();
@@ -43,17 +42,13 @@ export default function ScanAndSellPage() {
     const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const scannerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isMounted = useRef(true);
 
     const stopCamera = useCallback(() => {
         if (videoRef.current && videoRef.current.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
             videoRef.current.srcObject = null;
-        }
-        if (scannerIntervalRef.current) {
-            clearInterval(scannerIntervalRef.current);
-            scannerIntervalRef.current = null;
         }
         setHasCameraPermission(null);
         setScanStatus('Camera is off.');
@@ -85,6 +80,7 @@ export default function ScanAndSellPage() {
     }, [toast]);
 
     useEffect(() => {
+        isMounted.current = true;
         if (isCameraOn) {
             startCamera();
         } else {
@@ -92,13 +88,14 @@ export default function ScanAndSellPage() {
         }
 
         return () => {
+            isMounted.current = false;
             stopCamera();
         };
     }, [isCameraOn, startCamera, stopCamera]);
 
 
     const handleScan = useCallback(async () => {
-        if (!videoRef.current || videoRef.current.paused || videoRef.current.ended || !isCameraOn || !hasCameraPermission) {
+        if (!isMounted.current || isScanning || !videoRef.current || videoRef.current.paused || videoRef.current.ended || !isCameraOn || !hasCameraPermission) {
             return;
         }
         
@@ -134,7 +131,7 @@ export default function ScanAndSellPage() {
                         setScanStatus(`Added: ${foundItem.name}`);
                         setTimeout(() => setLastScannedId(null), RESCAN_DELAY);
                     } else {
-                        setScanStatus(`Detected: ${foundItem.name} (already scanned)`);
+                        setScanStatus(`Detected: ${foundItem.name} (Waiting)`);
                     }
                 } else {
                      setScanStatus(`Item not found: "${result.itemName}"`);
@@ -143,35 +140,32 @@ export default function ScanAndSellPage() {
             } catch (error) {
                 setScanStatus('Could not identify item. Trying again.');
             } finally {
-                setIsScanning(false);
+                if (isMounted.current) {
+                  setIsScanning(false);
+                }
             }
         } else {
-            setIsScanning(false);
+             if (isMounted.current) {
+               setIsScanning(false);
+             }
         }
-    }, [isCameraOn, hasCameraPermission, lastScannedId]);
+    }, [isScanning, isCameraOn, hasCameraPermission, lastScannedId]);
 
     useEffect(() => {
-        if (isCameraOn && hasCameraPermission) {
-            if (!scannerIntervalRef.current) {
-                scannerIntervalRef.current = setInterval(() => {
-                    if (!isScanning) {
-                        handleScan();
-                    }
-                }, SCAN_INTERVAL);
-            }
-        } else {
-            if (scannerIntervalRef.current) {
-                clearInterval(scannerIntervalRef.current);
-                scannerIntervalRef.current = null;
-            }
+        let scanLoop: NodeJS.Timeout;
+        const startScanLoop = () => {
+            handleScan();
+            scanLoop = setTimeout(startScanLoop, 100);
+        }
+
+        if(isCameraOn && hasCameraPermission) {
+            startScanLoop();
         }
 
         return () => {
-            if (scannerIntervalRef.current) {
-                clearInterval(scannerIntervalRef.current);
-            }
+            clearTimeout(scanLoop);
         };
-    }, [isCameraOn, hasCameraPermission, isScanning, handleScan]);
+    }, [isCameraOn, hasCameraPermission, handleScan]);
 
 
     const addToCart = (item: typeof mockInventory[0]) => {
@@ -323,7 +317,3 @@ export default function ScanAndSellPage() {
             </div>
         </div>
     );
-}
-    
-
-    
