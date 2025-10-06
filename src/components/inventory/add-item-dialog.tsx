@@ -18,9 +18,10 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, Upload } from "lucide-react";
+import { Camera, ScanLine, Sparkles, Upload } from "lucide-react";
 import Image from "next/image";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { suggestItemDetailsFromImage } from "@/ai/flows/suggest-item-details-from-image";
 
 const itemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -45,7 +46,7 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
     resolver: zodResolver(itemSchema),
     defaultValues: {
       name: "",
-      category: "Food",
+      category: "",
       cost: 0,
       price: 0,
       quantity: 1,
@@ -56,11 +57,12 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
   const [activeTab, setActiveTab] = useState("upload");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
-    if (open && activeTab === 'camera') {
+    if (open && (activeTab === 'camera' || activeTab === 'scan')) {
       getCameraPermission();
     } else {
       stopCamera();
@@ -76,7 +78,7 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
   };
 
   const getCameraPermission = async () => {
-    if (hasCameraPermission) return;
+    if (hasCameraPermission === true) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setHasCameraPermission(true);
@@ -107,7 +109,7 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
     }
   };
 
-  const handleCapture = () => {
+  const captureFrame = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -116,10 +118,44 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
       const context = canvas.getContext("2d");
       if (context) {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/png");
-        setImagePreview(dataUrl);
-        form.setValue("imageUrl", dataUrl);
-        setActiveTab("upload"); // Switch back to upload tab to show preview
+        return canvas.toDataURL("image/jpeg");
+      }
+    }
+    return null;
+  }
+
+  const handleCapture = () => {
+    const dataUrl = captureFrame();
+    if (dataUrl) {
+      setImagePreview(dataUrl);
+      form.setValue("imageUrl", dataUrl);
+      setActiveTab("upload"); // Switch back to upload tab to show preview
+    }
+  };
+
+  const handleScan = async () => {
+    const dataUrl = captureFrame();
+    if (dataUrl) {
+      setImagePreview(dataUrl);
+      form.setValue("imageUrl", dataUrl);
+      setIsScanning(true);
+      try {
+        const result = await suggestItemDetailsFromImage({ imageDataUri: dataUrl });
+        if (result.itemName) form.setValue("name", result.itemName);
+        if (result.category) form.setValue("category", result.category);
+        toast({
+          title: "Scan Successful",
+          description: "Item name and category have been populated."
+        })
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Scan Failed",
+          description: "Could not identify the item. Please try again."
+        });
+      } finally {
+        setIsScanning(false);
+        setActiveTab("upload");
       }
     }
   };
@@ -160,25 +196,26 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="relative aspect-video w-full bg-muted rounded-lg border border-dashed flex items-center justify-center overflow-hidden">
-                {activeTab === 'upload' && imagePreview && (
+                {imagePreview && (activeTab === 'upload' || activeTab === 'scan') && (
                     <Image src={imagePreview} alt="Image preview" layout="fill" className="object-cover" />
                 )}
-                {activeTab === 'upload' && !imagePreview && (
+                {!imagePreview && activeTab === 'upload' && (
                     <div className="flex flex-col items-center text-center text-muted-foreground p-4">
                         <Upload className="h-10 w-10 mb-2" />
                         <p className="text-sm font-medium">Upload an image</p>
                         <p className="text-xs">Your item's visual identity</p>
                     </div>
                 )}
-                {activeTab === 'camera' && (
+                {(activeTab === 'camera' || activeTab === 'scan') && !imagePreview && (
                     <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                 )}
                  <canvas ref={canvasRef} className="hidden"></canvas>
               </div>
 
-              <TabsList className="grid w-full grid-cols-2 mt-4">
+              <TabsList className="grid w-full grid-cols-3 mt-4">
                 <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" /> Upload</TabsTrigger>
                 <TabsTrigger value="camera"><Camera className="mr-2 h-4 w-4"/> Camera</TabsTrigger>
+                <TabsTrigger value="scan"><ScanLine className="mr-2 h-4 w-4" /> Scan</TabsTrigger>
               </TabsList>
               
               <TabsContent value="upload" className="mt-4">
@@ -196,6 +233,24 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
                <Button type="button" onClick={handleCapture} disabled={!hasCameraPermission} className="w-full">
                     <Camera className="mr-2 h-4 w-4" />
                     Take Picture
+                </Button>
+              </TabsContent>
+              <TabsContent value="scan" className="mt-4">
+                {hasCameraPermission === false && (
+                    <Alert variant="destructive" className="mb-4">
+                        <AlertTitle>Camera Access Required</AlertTitle>
+                        <AlertDescription>
+                        Please allow camera access to use this feature.
+                        </AlertDescription>
+                    </Alert>
+                )}
+                <Button type="button" onClick={handleScan} disabled={!hasCameraPermission || isScanning} className="w-full">
+                    {isScanning ? (
+                        <Sparkles className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <ScanLine className="mr-2 h-4 w-4" />
+                    )}
+                    {isScanning ? "Scanning..." : "Scan Item"}
                 </Button>
               </TabsContent>
             </Tabs>
