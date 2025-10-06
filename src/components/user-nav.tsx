@@ -12,17 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { auth } from "@/lib/firebase";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { LifeBuoy, LogOut, Settings, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 
 export function UserNav() {
-  const { user } = useAuth();
+  const user = useUser();
+  const auth = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
+    if (!auth) return;
     await signOut(auth);
     router.push('/login');
   };

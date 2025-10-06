@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "login-background",
-      "description": "Abstract purple and teal shapes for login background",
-      "imageUrl": "https://images.unsplash.com/photo-1613327986042-63d4425a1a5d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhYnN0cmFjdCUyMHB1cnBsZXxlbnwwfHx8fDE3NTk2ODY3NTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "abstract purple"
+      "description": "Abstract blue and teal shapes for login background",
+      "imageUrl": "https://images.unsplash.com/photo-1554147090-e1221a04a025?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGJsdWV8ZW58MHx8fHwxNzU5NjkwMDY0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract blue"
     },
     {
       "id": "templates-empty",

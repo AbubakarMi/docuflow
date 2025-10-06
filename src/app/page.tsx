@@ -2,12 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const user = useUser();
+  const loading = user === undefined;
 
   useEffect(() => {
     if (!loading) {

@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+
 
 const templates = [
   {
@@ -41,6 +43,7 @@ const templates = [
 
 export default function TemplatesPage() {
   const isEmpty = templates.length === 0;
+  const emptyTemplatesImage = PlaceHolderImages.find(p => p.id === 'templates-empty');
 
   return (
     <div className="flex flex-col gap-6">
@@ -63,12 +66,12 @@ export default function TemplatesPage() {
         <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-24">
           <div className="flex flex-col items-center gap-2 text-center">
             <Image 
-              src="https://picsum.photos/seed/docuflow-empty-template/400/300"
+              src={emptyTemplatesImage?.imageUrl || "https://picsum.photos/seed/docuflow-empty-template/400/300"}
               width={400}
               height={300}
-              alt="Empty state"
+              alt={emptyTemplatesImage?.description || "Empty state"}
               className="mb-4 rounded-lg"
-              data-ai-hint="document paper"
+              data-ai-hint={emptyTemplatesImage?.imageHint}
             />
             <h3 className="text-2xl font-bold tracking-tight">
               No templates yet

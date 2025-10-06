@@ -1,15 +1,22 @@
 "use client";
 
-import { useAuth } from '@/hooks/use-auth';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function ClientAuthGuard({ children }: { children: React.ReactNode }) {
-    const { user, loading } = useAuth();
+    const user = useUser();
     const router = useRouter();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const unsubscribe = useUser.length;
+
+        if (unsubscribe) {
+            setLoading(false);
+        }
+
         if (!loading && !user) {
             router.replace('/login');
         }

@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Package } from "lucide-react";
 import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const inventoryItems = [
     { id: '1', name: 'Premium Website Template', cost: 50, price: 299, quantity: 100 },
@@ -30,6 +31,7 @@ const formatCurrency = (amount: number) => {
 
 export default function InventoryPage() {
   const isEmpty = inventoryItems.length === 0;
+  const emptyInventoryImage = PlaceHolderImages.find(p => p.id === 'inventory-empty');
 
   const totals = inventoryItems.reduce((acc, item) => {
     acc.revenue += item.price * item.quantity;
@@ -92,12 +94,12 @@ export default function InventoryPage() {
                 <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-24">
                   <div className="flex flex-col items-center gap-2 text-center">
                     <Image 
-                      src="https://picsum.photos/seed/docuflow-empty-inventory/400/300"
+                      src={emptyInventoryImage?.imageUrl || "https://picsum.photos/seed/docuflow-empty-inventory/400/300"}
                       width={400}
                       height={300}
-                      alt="Empty inventory"
+                      alt={emptyInventoryImage?.description || "Empty inventory"}
                       className="mb-4 rounded-lg"
-                      data-ai-hint="empty box"
+                      data-ai-hint={emptyInventoryImage?.imageHint}
                     />
                     <h3 className="text-2xl font-bold tracking-tight">
                       Your inventory is empty
