@@ -11,12 +11,12 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const SuggestItemDetailsInputSchema = z.object({
+const SuggestItemDetailsInputSchema = z.object({
   imageDataUri: z.string().describe("A photo of an item, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type SuggestItemDetailsInput = z.infer<typeof SuggestItemDetailsInputSchema>;
 
-export const SuggestItemDetailsOutputSchema = z.object({
+const SuggestItemDetailsOutputSchema = z.object({
   itemName: z.string().describe("A short, user-friendly name for the item. Be very specific (e.g., 'Coca-Cola Can' not 'Soda')."),
   category: z.string().describe("A single, general-purpose category for the item (e.g., 'Food', 'Drink', 'Snack')."),
 });
