@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -7,24 +8,15 @@ import {
   CardTitle,
   CardDescription
 } from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, PlusCircle } from "lucide-react";
+import { PlusCircle, ChevronRight, Package } from "lucide-react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { formatCurrency } from "@/lib/utils";
 import { AddItemDialog } from "@/components/inventory/add-item-dialog";
 import { useState } from "react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { EditItemDialog } from "@/components/inventory/edit-item-dialog";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import Link from "next/link";
+import { InventoryItem } from "./[category]/page";
 
 const initialInventoryItems = [
     { id: '1', name: 'Jollof Rice', category: 'Food', cost: 500, price: 1500, quantity: 50, imageUrl: 'https://picsum.photos/seed/jollof/200/200' },
@@ -34,12 +26,9 @@ const initialInventoryItems = [
     { id: '5', name: 'Fried Rice', category: 'Food', cost: 500, price: 1500, quantity: 40, imageUrl: 'https://picsum.photos/seed/friedrice/200/200' },
 ];
 
-export type InventoryItem = typeof initialInventoryItems[0];
-
 export default function InventoryPage() {
   const [inventoryItems, setInventoryItems] = useState(initialInventoryItems);
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-
+  
   const isEmpty = inventoryItems.length === 0;
   const emptyInventoryImage = PlaceHolderImages.find(p => p.id === 'inventory-empty');
 
@@ -55,15 +44,7 @@ export default function InventoryPage() {
     setInventoryItems(prev => [...prev, { ...item, id: String(prev.length + 1) }]);
   };
 
-  const handleUpdateItem = (updatedItem: InventoryItem) => {
-    setInventoryItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-    setEditingItem(null);
-  }
-
-  const groupedItems = inventoryItems.reduce((acc, item) => {
-    (acc[item.category] = acc[item.category] || []).push(item);
-    return acc;
-  }, {} as Record<string, InventoryItem[]>);
+  const categories = [...new Set(inventoryItems.map(item => item.category))];
 
   return (
     <div className="flex flex-col gap-6">
@@ -110,9 +91,9 @@ export default function InventoryPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Items by Category</CardTitle>
+          <CardTitle>Item Categories</CardTitle>
           <CardDescription>
-            List of your current inventory, organized by category.
+            Select a category to view its items.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -131,7 +112,7 @@ export default function InventoryPage() {
                       Your inventory is empty
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Add items to start tracking your profit.
+                      Add an item to get started.
                     </p>
                     <AddItemDialog onAddItem={handleAddItem}>
                       <Button className="mt-4">
@@ -141,77 +122,34 @@ export default function InventoryPage() {
                   </div>
                 </div>
             ) : (
-                <Accordion type="multiple" defaultValue={Object.keys(groupedItems)} className="w-full">
-                  {Object.entries(groupedItems).map(([category, items]) => (
-                    <AccordionItem value={category} key={category}>
-                      <AccordionTrigger className="text-lg font-medium">{category} ({items.length})</AccordionTrigger>
-                      <AccordionContent>
-                        <Table>
-                          <TableHeader>
-                          <TableRow>
-                              <TableHead>Item</TableHead>
-                              <TableHead className="text-right">Cost</TableHead>
-                              <TableHead className="text-right">Price</TableHead>
-                              <TableHead className="text-right">Quantity</TableHead>
-                              <TableHead className="text-right">Profit / Unit</TableHead>
-                              <TableHead className="text-right w-[50px]">Actions</TableHead>
-                          </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                          {items.map((item) => (
-                              <TableRow key={item.id}>
-                                  <TableCell className="font-medium">
-                                      <div className="flex items-center gap-3">
-                                          <Image
-                                              src={item.imageUrl || "https://picsum.photos/seed/placeholder/40/40"}
-                                              alt={item.name}
-                                              width={40}
-                                              height={40}
-                                              className="rounded-md object-cover"
-                                          />
-                                          <span>{item.name}</span>
-                                      </div>
-                                  </TableCell>
-                                  <TableCell className="text-right">{formatCurrency(item.cost, 'NGN')}</TableCell>
-                                  <TableCell className="text-right">{formatCurrency(item.price, 'NGN')}</TableCell>
-                                  <TableCell className="text-right">{item.quantity}</TableCell>
-                                  <TableCell className={`text-right font-medium ${item.price - item.cost >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                      {formatCurrency(item.price - item.cost, 'NGN')}
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                      <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                  <MoreVertical className="h-4 w-4" />
-                                              </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end">
-                                              <DropdownMenuItem onClick={() => setEditingItem(item)}>
-                                                  Edit
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                      </DropdownMenu>
-                                  </TableCell>
-                              </TableRow>
-                          ))}
-                          </TableBody>
-                        </Table>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {categories.map((category) => {
+                    const itemCount = inventoryItems.filter(item => item.category === category).length;
+                    return (
+                      <Link href={`/inventory/${category.toLowerCase()}`} key={category}>
+                        <Card className="hover:bg-muted/50 transition-colors">
+                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-lg font-medium">{category}</CardTitle>
+                            <Package className="h-6 w-6 text-muted-foreground" />
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">{itemCount} {itemCount === 1 ? 'item' : 'items'}</p>
+                          </CardContent>
+                          <CardFooter>
+                              <Button variant="link" className="p-0 h-auto text-sm">
+                                View Items
+                                <ChevronRight className="ml-1 h-4 w-4" />
+                              </Button>
+                          </CardFooter>
+                        </Card>
+                      </Link>
+                    )
+                  })}
+                </div>
             )}
         </CardContent>
       </Card>
-      
-      {editingItem && (
-        <EditItemDialog
-          item={editingItem}
-          onUpdateItem={handleUpdateItem}
-          onOpenChange={(isOpen) => !isOpen && setEditingItem(null)}
-        />
-      )}
     </div>
   );
 }
+
