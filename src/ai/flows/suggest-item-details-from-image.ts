@@ -51,7 +51,23 @@ const suggestItemDetailsFlow = ai.defineFlow(
         outputSchema: SuggestItemDetailsOutputSchema,
     },
     async (input) => {
-        const { output } = await prompt(input);
+        const { output } = await ai.generate({
+            model: 'googleai/gemini-2.5-flash-image-preview',
+            prompt: `You are an expert at identifying items from images for a point-of-sale inventory system. Your goal is maximum accuracy and speed.
+
+Analyze the image provided and identify the main item with high precision. For example, if you see a can of Coca-Cola, identify it as 'Coca-Cola', not just 'soda' or 'drink'. If you see a bag of Lay's Classic potato chips, identify it as 'Lay's Classic Chips', not just 'chips'.
+
+Based on your identification, provide:
+1.  A short, specific, user-friendly name for the item.
+2.  A single, general-purpose category for the item (e.g., 'Food', 'Drink', 'Snack').
+
+Image: {{media url=${input.imageDataUri}}}
+
+Respond with only the extracted JSON data. Be fast and accurate.`,
+            output: {
+                schema: SuggestItemDetailsOutputSchema,
+            },
+        });
         return output!;
     }
 )
