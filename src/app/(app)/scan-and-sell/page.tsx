@@ -152,18 +152,21 @@ export default function ScanAndSellPage() {
     }, [isScanning, isCameraOn, hasCameraPermission, lastScannedId]);
 
     useEffect(() => {
-        let scanLoop: NodeJS.Timeout;
-        const startScanLoop = () => {
-            handleScan();
-            scanLoop = setTimeout(startScanLoop, 100);
-        }
+        let animationFrameId: number;
 
-        if(isCameraOn && hasCameraPermission) {
-            startScanLoop();
+        const scanLoop = async () => {
+            await handleScan();
+            if (isMounted.current) {
+                animationFrameId = requestAnimationFrame(scanLoop);
+            }
+        };
+
+        if (isCameraOn && hasCameraPermission) {
+            animationFrameId = requestAnimationFrame(scanLoop);
         }
 
         return () => {
-            clearTimeout(scanLoop);
+            cancelAnimationFrame(animationFrameId);
         };
     }, [isCameraOn, hasCameraPermission, handleScan]);
 
@@ -317,3 +320,5 @@ export default function ScanAndSellPage() {
             </div>
         </div>
     );
+}
+    
