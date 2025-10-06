@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -15,16 +14,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Camera, Upload } from "lucide-react";
+import Image from "next/image";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const itemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   cost: z.coerce.number().min(0, "Cost must be a positive number"),
   price: z.coerce.number().min(0, "Price must be a positive number"),
   quantity: z.coerce.number().int().min(0, "Quantity must be a positive integer"),
-  imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  imageUrl: z.string().optional().or(z.literal('')),
 });
 
 type ItemFormValues = z.infer<typeof itemSchema>;
@@ -48,6 +51,78 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
     },
   });
 
+  const [activeTab, setActiveTab] = useState("upload");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    if (open && activeTab === 'camera') {
+      getCameraPermission();
+    } else {
+      stopCamera();
+    }
+  }, [open, activeTab]);
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  };
+
+  const getCameraPermission = async () => {
+    if (hasCameraPermission) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasCameraPermission(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      setHasCameraPermission(false);
+      toast({
+        variant: "destructive",
+        title: "Camera Access Denied",
+        description: "Please enable camera permissions in your browser settings.",
+      });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        setImagePreview(dataUrl);
+        form.setValue("imageUrl", dataUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCapture = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/png");
+        setImagePreview(dataUrl);
+        form.setValue("imageUrl", dataUrl);
+        setActiveTab("upload"); // Switch back to upload tab to show preview
+      }
+    }
+  };
+
+
   const onSubmit = (data: ItemFormValues) => {
     onAddItem(data);
     toast({
@@ -55,13 +130,24 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
       description: `${data.name} has been added to your inventory.`,
     });
     form.reset();
+    setImagePreview(null);
     setOpen(false);
   };
+  
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+        stopCamera();
+        form.reset();
+        setImagePreview(null);
+        setHasCameraPermission(null);
+    }
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Add New Item</DialogTitle>
           <DialogDescription>
@@ -72,29 +158,67 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input id="name" {...form.register("name")} />
-            {form.formState.errors.name && <p className="text-red-500 text-xs">{form.formState.errors.name.message}</p>}
+            {form.formState.errors.name && <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>}
           </div>
-           <div className="space-y-2">
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <Input id="imageUrl" {...form.register("imageUrl")} placeholder="https://example.com/image.png"/>
-            {form.formState.errors.imageUrl && <p className="text-red-500 text-xs">{form.formState.errors.imageUrl.message}</p>}
+
+          <div className="space-y-2">
+            <Label>Image</Label>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" /> Upload File</TabsTrigger>
+                <TabsTrigger value="camera"><Camera className="mr-2 h-4 w-4"/> Use Camera</TabsTrigger>
+              </TabsList>
+              <TabsContent value="upload">
+                <div className="mt-2 flex flex-col items-center gap-4 rounded-lg border border-dashed p-4">
+                   {imagePreview ? (
+                        <Image src={imagePreview} alt="Image preview" width={128} height={128} className="rounded-md object-cover" />
+                    ) : (
+                        <div className="flex flex-col items-center text-center text-muted-foreground">
+                            <Upload className="h-10 w-10" />
+                            <p className="mt-2 text-sm">Upload an image for your item</p>
+                        </div>
+                    )}
+                  <Input id="picture" type="file" accept="image/*" onChange={handleFileChange} className="w-full" />
+                </div>
+              </TabsContent>
+              <TabsContent value="camera">
+                <div className="mt-2 flex flex-col items-center gap-4 rounded-lg border border-dashed p-4">
+                   <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
+                    {hasCameraPermission === false && (
+                      <Alert variant="destructive">
+                        <AlertTitle>Camera Access Required</AlertTitle>
+                        <AlertDescription>
+                          Please allow camera access to use this feature.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                   <Button type="button" onClick={handleCapture} disabled={!hasCameraPermission}>
+                        <Camera className="mr-2 h-4 w-4" />
+                        Take Picture
+                    </Button>
+                </div>
+                 <canvas ref={canvasRef} className="hidden"></canvas>
+              </TabsContent>
+            </Tabs>
+             {form.formState.errors.imageUrl && <p className="text-destructive text-xs">{form.formState.errors.imageUrl.message}</p>}
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="cost">Cost (₦)</Label>
               <Input id="cost" type="number" {...form.register("cost")} />
-               {form.formState.errors.cost && <p className="text-red-500 text-xs">{form.formState.errors.cost.message}</p>}
+               {form.formState.errors.cost && <p className="text-destructive text-xs">{form.formState.errors.cost.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Price (₦)</Label>
               <Input id="price" type="number" {...form.register("price")} />
-              {form.formState.errors.price && <p className="text-red-500 text-xs">{form.formState.errors.price.message}</p>}
+              {form.formState.errors.price && <p className="text-destructive text-xs">{form.formState.errors.price.message}</p>}
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="quantity">Quantity</Label>
             <Input id="quantity" type="number" {...form.register("quantity")} />
-            {form.formState.errors.quantity && <p className="text-red-500 text-xs">{form.formState.errors.quantity.message}</p>}
+            {form.formState.errors.quantity && <p className="text-destructive text-xs">{form.formState.errors.quantity.message}</p>}
           </div>
           <DialogFooter>
             <Button type="submit">Add Item</Button>
