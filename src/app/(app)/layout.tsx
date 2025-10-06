@@ -14,7 +14,7 @@ import {
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
 import { ClientAuthGuard } from "./client-auth-guard";
-import { LayoutDashboard, FileText, Box, Settings, ChevronsUpDown } from "lucide-react";
+import { LayoutDashboard, FileText, Box, Settings, ChevronsUpDown, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -22,6 +22,7 @@ const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/templates", label: "Templates", icon: FileText },
   { href: "/inventory", label: "Inventory", icon: Box },
+  { href: "/users", label: "Users", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
