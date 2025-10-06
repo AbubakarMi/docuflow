@@ -20,6 +20,8 @@ const mockInventory = [
     { id: '3', name: 'Beef Samosa', category: 'Snacks', cost: 150, price: 400, quantity: 200, imageUrl: 'https://picsum.photos/seed/samosa/200/200' },
     { id: '4', name: 'Bottle of Water', category: 'Drinks', cost: 50, price: 150, quantity: 150, imageUrl: 'https://picsum.photos/seed/water/200/200' },
     { id: '5', name: 'Fried Rice', category: 'Food', cost: 500, price: 1500, quantity: 40, imageUrl: 'https://picsum.photos/seed/friedrice/200/200' },
+    { id: '6', name: 'Fanta', category: 'Drinks', cost: 100, price: 250, quantity: 80, imageUrl: 'https://picsum.photos/seed/fanta/200/200' },
+    { id: '7', name: 'Pepsi', category: 'Drinks', cost: 100, price: 250, quantity: 70, imageUrl: 'https://picsum.photos/seed/pepsi/200/200' },
 ];
 
 type CartItem = {
