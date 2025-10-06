@@ -37,8 +37,24 @@ export default function ScanAndSellPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
+        const getCameraPermission = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                setHasCameraPermission(true);
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                }
+            } catch (error) {
+                console.error("Error accessing camera:", error);
+                setHasCameraPermission(false);
+            }
+        };
+
         getCameraPermission();
-        return () => stopCamera();
+
+        return () => {
+            stopCamera();
+        };
     }, []);
 
     const stopCamera = () => {
@@ -46,20 +62,6 @@ export default function ScanAndSellPage() {
             const stream = videoRef.current.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
             videoRef.current.srcObject = null;
-        }
-    };
-
-    const getCameraPermission = async () => {
-        if (hasCameraPermission) return;
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            setHasCameraPermission(true);
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-            }
-        } catch (error) {
-            console.error("Error accessing camera:", error);
-            setHasCameraPermission(false);
         }
     };
 
@@ -268,3 +270,4 @@ export default function ScanAndSellPage() {
         </div>
     );
 }
+    

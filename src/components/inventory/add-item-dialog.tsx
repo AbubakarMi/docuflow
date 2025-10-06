@@ -62,12 +62,15 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
-    if (open && (activeTab === 'camera' || activeTab === 'scan')) {
-      getCameraPermission();
-    } else {
-      stopCamera();
+    // Only manage camera on tab change if dialog is open
+    if (open) {
+      if (activeTab === 'camera' || activeTab === 'scan') {
+        getCameraPermission();
+      } else {
+        stopCamera();
+      }
     }
-  }, [open, activeTab]);
+  }, [activeTab, open]);
 
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
@@ -178,6 +181,9 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
         stopCamera();
         form.reset();
         setImagePreview(null);
+        setActiveTab('upload');
+    } else {
+        // Reset state when opening
         setHasCameraPermission(null);
     }
   }
@@ -206,8 +212,8 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
                         <p className="text-xs">Your item's visual identity</p>
                     </div>
                 )}
-                {(activeTab === 'camera' || activeTab === 'scan') && !imagePreview && (
-                    <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+                {(activeTab === 'camera' || activeTab === 'scan') && (
+                    <video ref={videoRef} className={`w-full h-full object-cover ${imagePreview ? 'hidden' : ''}`} autoPlay muted playsInline />
                 )}
                  <canvas ref={canvasRef} className="hidden"></canvas>
               </div>
@@ -295,3 +301,5 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
     </Dialog>
   );
 }
+
+    
