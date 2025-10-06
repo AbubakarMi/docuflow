@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,14 +20,44 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
-const teamMembers = [
+const initialTeamMembers = [
   { name: 'You', email: 'owner@example.com', role: 'Owner' },
   { name: 'Jane Doe', email: 'jane.doe@example.com', role: 'Admin' },
   { name: 'John Smith', email: 'john.smith@example.com', role: 'Member' },
 ];
 
 export default function SettingsPage() {
+  const { toast } = useToast();
+  const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
+  const [inviteEmail, setInviteEmail] = useState("");
+
+  const handleSave = (section: string) => {
+    toast({
+      title: `Saved ${section}`,
+      description: `Your ${section.toLowerCase()} settings have been updated.`,
+    });
+  };
+
+  const handleInvite = () => {
+    if (!inviteEmail || !/^\S+@\S+\.\S+$/.test(inviteEmail)) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Email",
+            description: "Please enter a valid email address.",
+        });
+        return;
+    }
+    setTeamMembers(prev => [...prev, { name: 'New Member', email: inviteEmail, role: 'Member' }]);
+    setInviteEmail("");
+    toast({
+      title: "Invitation Sent",
+      description: `An invitation has been sent to ${inviteEmail}.`,
+    });
+  };
+
   return (
     <div className="flex flex-col gap-8 max-w-4xl mx-auto">
       <div>
@@ -49,7 +81,7 @@ export default function SettingsPage() {
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" defaultValue="owner@example.com" disabled />
           </div>
-          <Button>Save Profile</Button>
+          <Button onClick={() => handleSave("Profile")}>Save Profile</Button>
         </CardContent>
       </Card>
 
@@ -65,7 +97,7 @@ export default function SettingsPage() {
             <Label htmlFor="workspace-name">Workspace Name</Label>
             <Input id="workspace-name" defaultValue="My Workspace" />
           </div>
-          <Button>Save Workspace</Button>
+          <Button onClick={() => handleSave("Workspace")}>Save Workspace</Button>
         </CardContent>
       </Card>
 
@@ -78,8 +110,13 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
             <div className="flex gap-2">
-                <Input type="email" placeholder="new.member@example.com" />
-                <Button>Invite Member</Button>
+                <Input 
+                  type="email" 
+                  placeholder="new.member@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                />
+                <Button onClick={handleInvite}>Invite Member</Button>
             </div>
             <Table>
                 <TableHeader>

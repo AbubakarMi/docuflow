@@ -1,3 +1,6 @@
+
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,18 +12,31 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MoreVertical, PlusCircle, FileText } from "lucide-react";
+import { MoreVertical, PlusCircle, FileText, Trash2, Edit, FileInput } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import React from "react";
 
-
-const templates = [
+const initialTemplates = [
   {
     id: "1",
     name: "Invoice Template",
@@ -42,8 +58,27 @@ const templates = [
 ];
 
 export default function TemplatesPage() {
+  const { toast } = useToast();
+  const [templates, setTemplates] = React.useState(initialTemplates);
   const isEmpty = templates.length === 0;
   const emptyTemplatesImage = PlaceHolderImages.find(p => p.id === 'templates-empty');
+
+  const handleDelete = (templateId: string) => {
+    setTemplates(prev => prev.filter(t => t.id !== templateId));
+    toast({
+      title: "Template Deleted",
+      description: "The template has been successfully deleted.",
+    });
+  };
+
+  const handleEdit = (templateId: string) => {
+    toast({
+      title: "Edit Template",
+      description: "Redirecting to edit page... (simulation)",
+    });
+    // In a real app, you would navigate to the edit page
+    // router.push(`/templates/${templateId}/edit`);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -100,9 +135,23 @@ export default function TemplatesPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Generate</DropdownMenuItem>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                         <Link href={`/generate?templateId=${template.id}`}>
+                           <FileInput />
+                           <span>Generate</span>
+                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(template.id)}>
+                        <Edit />
+                        <span>Edit</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                       <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-red-500 focus:text-red-500">
+                          <Trash2 />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -126,9 +175,24 @@ export default function TemplatesPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Link href={`/generate?templateId=${template.id}`} className="w-full">
-                  <Button className="w-full">Generate Document</Button>
-                </Link>
+                 <AlertDialog>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your
+                          template and remove your data from our servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(template.id)}>Continue</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                    <Link href={`/generate?templateId=${template.id}`} className="w-full">
+                        <Button className="w-full">Generate Document</Button>
+                    </Link>
+                </AlertDialog>
               </CardFooter>
             </Card>
           ))}

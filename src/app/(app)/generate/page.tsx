@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -112,6 +111,13 @@ export default function GeneratePage() {
   const subtotal = form.watch('items').reduce((acc, item) => acc + (item.quantity * item.price), 0);
   const tax = subtotal * 0.10;
   const total = subtotal + tax;
+
+  const handleAction = (action: 'Preview' | 'DOCX' | 'PDF') => {
+    toast({
+      title: `${action} Generation`,
+      description: `Generating ${action.toLowerCase()}... (simulation)`,
+    });
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
@@ -258,9 +264,9 @@ export default function GeneratePage() {
       </form>
 
       <div className="flex justify-end gap-2 mt-6">
-        <Button variant="outline">Preview</Button>
-        <Button>Generate DOCX</Button>
-        <Button>Generate PDF</Button>
+        <Button variant="outline" onClick={() => handleAction('Preview')}>Preview</Button>
+        <Button onClick={() => handleAction('DOCX')}>Generate DOCX</Button>
+        <Button onClick={() => handleAction('PDF')}>Generate PDF</Button>
       </div>
     </div>
   );

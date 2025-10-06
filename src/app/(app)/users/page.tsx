@@ -1,3 +1,6 @@
+
+"use client";
+
 import {
   Card,
   CardContent,
@@ -22,14 +25,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AddUserDialog } from "@/components/users/add-user-dialog";
+import { useState } from "react";
 
-const users = [
+const initialUsers = [
   { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'Admin' },
   { id: '2', name: 'John Doe', email: 'john.doe@example.com', role: 'Member' },
   { id: '3', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'Member' },
 ];
 
 export default function UsersPage() {
+  const [users, setUsers] = useState(initialUsers);
+  
+  const handleAddUser = (user: Omit<typeof users[0], 'id'>) => {
+    setUsers(prev => [...prev, { ...user, id: String(prev.length + 1) }]);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -39,10 +50,12 @@ export default function UsersPage() {
             Manage users and their roles in your workspace.
           </p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
+        <AddUserDialog onAddUser={handleAddUser}>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add User
+          </Button>
+        </AddUserDialog>
       </div>
       
       <Card>

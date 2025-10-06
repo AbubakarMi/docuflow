@@ -1,3 +1,6 @@
+
+"use client";
+
 import {
   Card,
   CardContent,
@@ -14,12 +17,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Package } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { formatCurrency } from "@/lib/utils";
+import { AddItemDialog } from "@/components/inventory/add-item-dialog";
+import { useState } from "react";
 
-const inventoryItems = [
+const initialInventoryItems = [
     { id: '1', name: 'Premium Website Template', cost: 5000, price: 29900, quantity: 100 },
     { id: '2', name: 'Consulting Hour', cost: 2000, price: 15000, quantity: 500 },
     { id: '3', name: 'Logo Design Package', cost: 10000, price: 50000, quantity: 50 },
@@ -27,6 +32,7 @@ const inventoryItems = [
 ];
 
 export default function InventoryPage() {
+  const [inventoryItems, setInventoryItems] = useState(initialInventoryItems);
   const isEmpty = inventoryItems.length === 0;
   const emptyInventoryImage = PlaceHolderImages.find(p => p.id === 'inventory-empty');
 
@@ -38,6 +44,10 @@ export default function InventoryPage() {
 
   const profit = totals.revenue - totals.cost;
 
+  const handleAddItem = (item: Omit<typeof initialInventoryItems[0], 'id'>) => {
+    setInventoryItems(prev => [...prev, { ...item, id: String(prev.length + 1) }]);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -47,10 +57,12 @@ export default function InventoryPage() {
             Track your products and services.
           </p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Item
-        </Button>
+        <AddItemDialog onAddItem={handleAddItem}>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Item
+          </Button>
+        </AddItemDialog>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -104,9 +116,11 @@ export default function InventoryPage() {
                     <p className="text-sm text-muted-foreground">
                       Add items to start tracking your profit.
                     </p>
-                    <Button className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-                    </Button>
+                    <AddItemDialog onAddItem={handleAddItem}>
+                      <Button className="mt-4">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+                      </Button>
+                    </AddItemDialog>
                   </div>
                 </div>
             ) : (
