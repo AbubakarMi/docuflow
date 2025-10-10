@@ -15,7 +15,8 @@
     "db:reset": "prisma migrate reset && npm run db:setup",
     "db:studio": "prisma studio",
     "create:superadmin": "tsx scripts/create-superadmin.ts",
-    "migrate:inventory": "tsx scripts/migrate-inventory-system.ts"
+    "migrate:inventory": "tsx scripts/migrate-inventory-system.ts",
+    "setup:approval": "tsx scripts/setup-approval-system.ts"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",

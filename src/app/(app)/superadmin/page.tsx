@@ -14,65 +14,76 @@ import {
   Search,
   Shield,
   Activity,
-  Eye
+  Eye,
+  AlertCircle,
+  Clock
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
+
+interface SystemStats {
+  totalBusinesses: number
+  activeBusinesses: number
+  pendingBusinesses: number
+  totalUsers: number
+  totalInvoices: number
+  totalRevenue: number
+  monthlyGrowth: number
+}
+
+interface Business {
+  id: string
+  name: string
+  email: string
+  plan: string
+  status: string
+  approved: boolean
+  createdAt: string
+  stats: {
+    users: number
+    invoices: number
+    revenue: number
+  }
+}
 
 export default function SuperAdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [systemStats, setSystemStats] = useState<SystemStats | null>(null)
+  const [businesses, setBusinesses] = useState<Business[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock data - Replace with actual API calls
-  const systemStats = {
-    totalBusinesses: 12,
-    activeBusinesses: 10,
-    totalUsers: 45,
-    totalInvoices: 234,
-    totalRevenue: 1245600,
-    monthlyGrowth: 12.5
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const [statsResponse, businessesResponse] = await Promise.all([
+        fetch('/api/superadmin/stats'),
+        fetch('/api/superadmin/businesses')
+      ])
+
+      const statsData = await statsResponse.json()
+      const businessesData = await businessesResponse.json()
+
+      if (statsData.success) {
+        setSystemStats(statsData.stats)
+      }
+
+      if (businessesData.success) {
+        setBusinesses(businessesData.businesses)
+      }
+    } catch (error) {
+      console.error('Failed to fetch data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const businesses = [
-    {
-      id: "1",
-      name: "Acme Corporation",
-      email: "info@acme.com",
-      plan: "business",
-      status: "active",
-      users: 5,
-      invoices: 45,
-      revenue: 125000,
-      createdAt: "2024-01-15"
-    },
-    {
-      id: "2",
-      name: "Tech Innovations",
-      email: "hello@techinnovations.com",
-      plan: "starter",
-      status: "active",
-      users: 2,
-      invoices: 12,
-      revenue: 45000,
-      createdAt: "2024-02-10"
-    },
-    {
-      id: "3",
-      name: "Global Services LLC",
-      email: "contact@globalservices.com",
-      plan: "enterprise",
-      status: "active",
-      users: 15,
-      invoices: 156,
-      revenue: 875000,
-      createdAt: "2023-11-20"
-    },
-  ]
-
-  const recentActivity = [
-    { business: "Acme Corporation", action: "Created invoice INV-1045", time: "2 minutes ago" },
-    { business: "Tech Innovations", action: "Registered new customer", time: "15 minutes ago" },
-    { business: "Global Services LLC", action: "Received payment $5,600", time: "1 hour ago" },
-    { business: "Acme Corporation", action: "New user registered", time: "2 hours ago" },
-  ]
+  const filteredBusinesses = businesses.filter(b =>
+    b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    b.email.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const getPlanBadge = (plan: string) => {
     const config: Record<string, { variant: any, label: string }> = {
@@ -95,6 +106,17 @@ export default function SuperAdminDashboard() {
     return <Badge variant={variant}>{label}</Badge>
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -106,9 +128,19 @@ export default function SuperAdminDashboard() {
           </div>
           <p className="text-muted-foreground">System-wide overview and management</p>
         </div>
-        <Badge variant="destructive" className="text-lg px-4 py-2">
-          SUPER ADMIN
-        </Badge>
+        <div className="flex gap-3">
+          {systemStats && systemStats.pendingBusinesses > 0 && (
+            <Link href="/superadmin/approvals">
+              <Button variant="outline">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                {systemStats.pendingBusinesses} Pending Approvals
+              </Button>
+            </Link>
+          )}
+          <Badge variant="destructive" className="text-lg px-4 py-2">
+            SUPER ADMIN
+          </Badge>
+        </div>
       </div>
 
       {/* System Stats */}
@@ -119,9 +151,9 @@ export default function SuperAdminDashboard() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{systemStats.totalBusinesses}</div>
+            <div className="text-2xl font-bold">{systemStats?.totalBusinesses || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {systemStats.activeBusinesses} active
+              {systemStats?.activeBusinesses || 0} active
             </p>
           </CardContent>
         </Card>
@@ -132,7 +164,7 @@ export default function SuperAdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{systemStats.totalUsers}</div>
+            <div className="text-2xl font-bold">{systemStats?.totalUsers || 0}</div>
             <p className="text-xs text-muted-foreground">
               Across all businesses
             </p>
@@ -145,7 +177,7 @@ export default function SuperAdminDashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{systemStats.totalInvoices}</div>
+            <div className="text-2xl font-bold">{systemStats?.totalInvoices || 0}</div>
             <p className="text-xs text-muted-foreground">
               System-wide
             </p>
@@ -158,7 +190,9 @@ export default function SuperAdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(systemStats.totalRevenue / 1000).toFixed(0)}k</div>
+            <div className="text-2xl font-bold">
+              ${((systemStats?.totalRevenue || 0) / 1000).toFixed(0)}k
+            </div>
             <p className="text-xs text-muted-foreground">
               All businesses combined
             </p>
@@ -171,7 +205,9 @@ export default function SuperAdminDashboard() {
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">+{systemStats.monthlyGrowth}%</div>
+            <div className="text-2xl font-bold text-green-600">
+              {systemStats?.monthlyGrowth ? `+${systemStats.monthlyGrowth}%` : '0%'}
+            </div>
             <p className="text-xs text-muted-foreground">
               vs last month
             </p>
@@ -180,13 +216,15 @@ export default function SuperAdminDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Now</CardTitle>
-            <Activity className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+            <AlertCircle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold text-orange-600">
+              {systemStats?.pendingBusinesses || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Users online
+              Awaiting review
             </p>
           </CardContent>
         </Card>
@@ -228,93 +266,100 @@ export default function SuperAdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {businesses.map((business) => (
-                  <TableRow key={business.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        {business.name}
-                      </div>
-                    </TableCell>
-                    <TableCell>{business.email}</TableCell>
-                    <TableCell>{getPlanBadge(business.plan)}</TableCell>
-                    <TableCell>{getStatusBadge(business.status)}</TableCell>
-                    <TableCell className="text-right">{business.users}</TableCell>
-                    <TableCell className="text-right">{business.invoices}</TableCell>
-                    <TableCell className="text-right font-semibold">
-                      ${business.revenue.toLocaleString()}
-                    </TableCell>
-                    <TableCell>{new Date(business.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
+                {filteredBusinesses.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      No businesses found
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredBusinesses.map((business) => (
+                    <TableRow key={business.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          {business.name}
+                          {!business.approved && (
+                            <Badge variant="secondary" className="ml-2">Pending</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{business.email}</TableCell>
+                      <TableCell>{getPlanBadge(business.plan)}</TableCell>
+                      <TableCell>{getStatusBadge(business.status)}</TableCell>
+                      <TableCell className="text-right">{business.stats.users}</TableCell>
+                      <TableCell className="text-right">{business.stats.invoices}</TableCell>
+                      <TableCell className="text-right font-semibold">
+                        ${business.stats.revenue.toLocaleString()}
+                      </TableCell>
+                      <TableCell>{new Date(business.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest actions across all businesses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <div className="h-2 w-2 rounded-full bg-blue-600 mt-2" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.business}</p>
-                    <p className="text-sm text-muted-foreground">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Quick Actions */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Link href="/superadmin/approvals">
+          <Card className="hover:bg-accent cursor-pointer transition-colors">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+                Business Approvals
+              </CardTitle>
+              <CardDescription>
+                Review and approve pending business registrations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {systemStats?.pendingBusinesses || 0} Pending
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        {/* System Health */}
-        <Card>
+        <Link href="/superadmin/users">
+          <Card className="hover:bg-accent cursor-pointer transition-colors">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                User Management
+              </CardTitle>
+              <CardDescription>
+                View and manage all users across businesses
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {systemStats?.totalUsers || 0} Users
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Card className="hover:bg-accent cursor-pointer transition-colors opacity-50">
           <CardHeader>
-            <CardTitle>System Health</CardTitle>
-            <CardDescription>Infrastructure status</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-purple-600" />
+              Template Management
+            </CardTitle>
+            <CardDescription>
+              Upload and manage invoice templates
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Database</span>
-                <Badge variant="success">Healthy</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">API Server</span>
-                <Badge variant="success">Running</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Email Service</span>
-                <Badge variant="success">Operational</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Storage</span>
-                <Badge variant="default">75% Used</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">CPU Load</span>
-                <Badge variant="default">32%</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Memory</span>
-                <Badge variant="default">58%</Badge>
-              </div>
-            </div>
+            <Badge variant="secondary">Coming Soon</Badge>
           </CardContent>
         </Card>
       </div>

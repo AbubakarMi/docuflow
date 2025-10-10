@@ -9,14 +9,19 @@ export async function POST(request: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Username/Email and password are required' },
         { status: 400 }
       )
     }
 
-    // Find user by email
+    // Find user by username OR email
     const user = await prisma.user.findFirst({
-      where: { email },
+      where: {
+        OR: [
+          { email: email },
+          { username: email }
+        ]
+      },
       include: {
         business: true
       }
@@ -36,6 +41,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
+      )
+    }
+
+    // Check if business is approved (skip for SuperAdmin)
+    if (!user.isSuperAdmin && user.business && !user.business.approved) {
+      return NextResponse.json(
+        { error: 'Your business is pending SuperAdmin approval', pendingApproval: true },
+        { status: 403 }
       )
     }
 

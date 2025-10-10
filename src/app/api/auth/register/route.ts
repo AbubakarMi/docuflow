@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     // Create business with user in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create business
+      // Create business (pending approval)
       const business = await tx.business.create({
         data: {
           name: businessName,
@@ -86,6 +86,8 @@ export async function POST(request: NextRequest) {
           website,
           currency: currency || 'USD',
           timezone: timezone || 'UTC',
+          approved: false, // Requires SuperAdmin approval
+          status: 'active'
         }
       })
 
@@ -126,7 +128,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Business registered successfully',
+      message: 'Business registered successfully! Please wait for SuperAdmin approval.',
+      pendingApproval: true,
       data: {
         businessId: result.business.id,
         businessName: result.business.name,
