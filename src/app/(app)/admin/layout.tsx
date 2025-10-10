@@ -31,6 +31,9 @@ import {
   CreditCard,
   Lock,
   Server,
+  Receipt,
+  UserCheck,
+  ShoppingCart,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -49,6 +52,14 @@ const adminMenuSections = [
       { href: "/admin/users", label: "All Users", icon: Users },
       { href: "/admin/roles", label: "Roles & Permissions", icon: Shield },
       { href: "/admin/teams", label: "Teams", icon: Users },
+    ],
+  },
+  {
+    label: "Business Operations",
+    items: [
+      { href: "/admin/invoices", label: "Invoices", icon: Receipt },
+      { href: "/admin/customers", label: "Customers", icon: UserCheck },
+      { href: "/admin/products", label: "Products", icon: ShoppingCart },
     ],
   },
   {

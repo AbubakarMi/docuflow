@@ -1,0 +1,307 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MULTI-TENANT CORE MODELS
+// ============================================
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String   @default("USA")
+  taxId       String?  // Tax ID or Business Registration Number
+  logo        String?  // URL to logo
+  website     String?
+
+  // Business settings
+  currency    String   @default("USD")
+  timezone    String   @default("UTC")
+
+  // Subscription & Status
+  plan        String   @default("free") // free, starter, business, enterprise
+  status      String   @default("active") // active, suspended, cancelled
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  customers   Customer[]
+  products    Product[]
+  invoices    Invoice[]
+  payments    Payment[]
+  settings    BusinessSettings?
+
+  @@index([email])
+  @@index([status])
+  @@map("businesses")
+}
+
+model BusinessSettings {
+  id                String   @id @default(cuid())
+  businessId        String   @unique
+  business          Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Invoice Settings
+  invoicePrefix     String   @default("INV")
+  nextInvoiceNumber Int      @default(1001)
+  invoiceTerms      String?  @db.Text
+  invoiceNotes      String?  @db.Text
+
+  // Payment Settings
+  paymentTermsDays  Int      @default(30)
+  lateFeePercent    Float    @default(0)
+
+  // Email Settings
+  emailFromName     String?
+  emailFromAddress  String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("business_settings")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  email       String
+  password    String
+  firstName   String
+  lastName    String
+  role        String   @default("user") // admin, manager, user, accountant
+  avatar      String?
+  phone       String?
+
+  status      String   @default("active") // active, inactive, suspended
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastLoginAt DateTime?
+
+  // Relations
+  invoicesCreated Invoice[] @relation("InvoiceCreator")
+
+  @@unique([businessId, email])
+  @@index([businessId])
+  @@index([email])
+  @@map("users")
+}
+
+// ============================================
+// CUSTOMER MANAGEMENT
+// ============================================
+
+model Customer {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Customer Info
+  customerCode String  // Unique code per business
+  name        String
+  email       String
+  phone       String?
+  company     String?
+
+  // Address
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String?
+
+  // Financial
+  taxId       String?
+  creditLimit Float?
+
+  status      String   @default("active") // active, inactive
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  invoices    Invoice[]
+
+  @@unique([businessId, customerCode])
+  @@index([businessId])
+  @@index([email])
+  @@map("customers")
+}
+
+// ============================================
+// PRODUCT/SERVICE CATALOG
+// ============================================
+
+model Product {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  sku         String   // Stock Keeping Unit
+  name        String
+  description String?  @db.Text
+  category    String?
+
+  // Pricing
+  price       Float
+  cost        Float?
+  taxRate     Float    @default(0)
+
+  // Inventory
+  trackInventory Boolean @default(false)
+  stockQuantity  Int     @default(0)
+  lowStockAlert  Int?
+
+  // Product Type
+  type        String   @default("product") // product, service
+
+  status      String   @default("active") // active, inactive
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  invoiceItems InvoiceItem[]
+
+  @@unique([businessId, sku])
+  @@index([businessId])
+  @@index([category])
+  @@map("products")
+}
+
+// ============================================
+// INVOICE MANAGEMENT
+// ============================================
+
+model Invoice {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Invoice Details
+  invoiceNumber   String   // Auto-generated: INV-1001, INV-1002, etc.
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+
+  // Dates
+  issueDate       DateTime @default(now())
+  dueDate         DateTime
+  paidDate        DateTime?
+
+  // Financial
+  subtotal        Float
+  taxAmount       Float    @default(0)
+  discountAmount  Float    @default(0)
+  totalAmount     Float
+  paidAmount      Float    @default(0)
+  balanceDue      Float
+
+  // Status
+  status          String   @default("draft") // draft, sent, paid, overdue, cancelled
+
+  // Additional Info
+  notes           String?  @db.Text
+  terms           String?  @db.Text
+  internalNotes   String?  @db.Text
+
+  // PDF
+  pdfUrl          String?
+
+  // Tracking
+  createdById     String
+  createdBy       User     @relation("InvoiceCreator", fields: [createdById], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  items           InvoiceItem[]
+  payments        Payment[]
+
+  @@unique([businessId, invoiceNumber])
+  @@index([businessId])
+  @@index([customerId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+
+  // Item Details
+  description String
+  quantity    Float
+  unitPrice   Float
+  taxRate     Float    @default(0)
+  discountPercent Float @default(0)
+
+  // Calculated
+  amount      Float    // (quantity * unitPrice) - discount + tax
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+// ============================================
+// PAYMENT TRACKING
+// ============================================
+
+model Payment {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  invoiceId       String
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id])
+
+  // Payment Details
+  paymentNumber   String
+  amount          Float
+  paymentDate     DateTime @default(now())
+  paymentMethod   String   // cash, check, credit_card, bank_transfer, paypal, stripe
+
+  // Transaction Info
+  transactionId   String?
+  checkNumber     String?
+  notes           String?  @db.Text
+
+  status          String   @default("completed") // completed, pending, failed, refunded
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([businessId, paymentNumber])
+  @@index([businessId])
+  @@index([invoiceId])
+  @@map("payments")
+}
