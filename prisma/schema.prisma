@@ -185,11 +185,43 @@ model Product {
 
   // Relations
   invoiceItems InvoiceItem[]
+  stockMovements StockMovement[]
 
   @@unique([businessId, sku])
   @@index([businessId])
   @@index([category])
   @@map("products")
+}
+
+// ============================================
+// INVENTORY STOCK MOVEMENTS
+// ============================================
+
+model StockMovement {
+  id          String   @id @default(cuid())
+  businessId  String
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Movement details
+  type        String   // in, out, adjustment
+  quantity    Int
+  previousQty Int
+  newQty      Int
+
+  // Reference
+  invoiceId   String?
+  reason      String?  @db.Text
+  notes       String?  @db.Text
+
+  createdAt   DateTime @default(now())
+  createdBy   String?  // userId who made the change
+
+  @@index([businessId])
+  @@index([productId])
+  @@index([invoiceId])
+  @@index([createdAt])
+  @@map("stock_movements")
 }
 
 // ============================================

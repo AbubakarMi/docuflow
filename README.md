@@ -1,6 +1,6 @@
-# 🧾 DocuFlow - Enterprise Multi-Tenant Invoice Management System
+# 🧾 DocuFlow - Enterprise Multi-Tenant Invoice + Inventory System
 
-> **Production-ready invoice generation and management platform** with complete multi-tenancy, super admin oversight, and enterprise-grade security.
+> **Production-ready invoice and inventory management platform** with automatic stock deduction, complete multi-tenancy, super admin oversight, and enterprise-grade security.
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue)](https://www.postgresql.org/)
@@ -11,8 +11,9 @@
 
 ## 🌟 Overview
 
-DocuFlow is a **complete SaaS platform** for invoice management with:
+DocuFlow is a **complete SaaS platform** for invoice and inventory management with:
 - ✅ **Multi-Tenancy**: Unlimited businesses in one database
+- ✅ **Auto Inventory**: Stock deducts automatically when invoices are created
 - ✅ **Super Admin**: System-wide oversight and management
 - ✅ **Professional Invoicing**: Auto-calculations, PDF generation
 - ✅ **Privacy First**: Complete business data isolation
@@ -26,13 +27,16 @@ DocuFlow is a **complete SaaS platform** for invoice management with:
 # 1. Install dependencies
 npm install
 
-# 2. Create SuperAdmin account
+# 2. Setup inventory system
+npm run migrate:inventory
+
+# 3. Create SuperAdmin account
 npm run create:superadmin
 
-# 3. Seed demo data (optional)
+# 4. Seed demo data (optional)
 npm run db:setup
 
-# 4. Start development server
+# 5. Start development server
 npm run dev
 ```
 
@@ -63,12 +67,14 @@ Business 2: admin@techinnovations.com / password123
 ## 🎯 Key Features
 
 ### For Businesses
+- 📦 **Auto Inventory** - Stock deducts automatically when invoices are created
 - 📝 **Professional Invoices** - Multi-line items with tax & discounts
 - 👥 **Customer Management** - Unlimited customers per business
-- 🛍️ **Product Catalog** - Maintain products/services
+- 🛍️ **Product Catalog** - Maintain products/services with stock levels
 - 💰 **Payment Tracking** - Automatic reconciliation
 - 📄 **PDF Generation** - Beautiful, downloadable invoices
 - 📊 **Dashboard Analytics** - Revenue and performance metrics
+- 🔔 **Low Stock Alerts** - Never run out of inventory
 - ⚙️ **Customization** - Invoice numbering, terms, branding
 
 ### For Platform Owners
@@ -92,6 +98,7 @@ npm start                  # Start production server
 
 ### Database
 ```bash
+npm run migrate:inventory  # Setup inventory system
 npm run db:setup           # Populate demo data
 npm run db:studio          # Open database GUI
 npm run db:reset           # Reset & reseed database
@@ -104,11 +111,11 @@ npm run create:superadmin  # Create SuperAdmin account
 
 | Document | Description |
 |----------|-------------|
-| [PRODUCTION_READY_GUIDE.md](./PRODUCTION_READY_GUIDE.md) | **Complete production guide** ⭐ |
+| **[FINAL_SYSTEM_OVERVIEW.md](./FINAL_SYSTEM_OVERVIEW.md)** | **Complete system overview** ⭐ |
+| [INVENTORY_SYSTEM_GUIDE.md](./INVENTORY_SYSTEM_GUIDE.md) | **Inventory management guide** 📦 |
+| [PRODUCTION_READY_GUIDE.md](./PRODUCTION_READY_GUIDE.md) | Production deployment guide |
 | [GETTING_STARTED.md](./GETTING_STARTED.md) | Step-by-step tutorial |
 | [MULTI_TENANT_INVOICE_SYSTEM.md](./MULTI_TENANT_INVOICE_SYSTEM.md) | Technical documentation |
-| [README_INVOICE_SYSTEM.md](./README_INVOICE_SYSTEM.md) | Feature overview |
-| [SYSTEM_SUMMARY.md](./SYSTEM_SUMMARY.md) | Implementation summary |
 
 ---
 
@@ -116,9 +123,11 @@ npm run create:superadmin  # Create SuperAdmin account
 
 DocuFlow is a **complete, production-ready SaaS platform** featuring:
 
-✅ Multi-tenant invoice management
+✅ **Automatic inventory management** - Stock deducts on invoice creation
+✅ Multi-tenant architecture (2 roles: Business Admin + Super Admin)
 ✅ Comprehensive 4-step business registration
-✅ Super Admin system with full oversight
+✅ Stock movement tracking (IN/OUT/ADJUSTMENT)
+✅ Low stock alerts and out-of-stock prevention
 ✅ Professional PDF invoice generation
 ✅ Complete payment tracking
 ✅ Enterprise-grade security

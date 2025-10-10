@@ -91,6 +91,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate stock availability for products
+    const stockErrors = []
+    for (const item of items) {
+      if (item.productId) {
+        const product = await prisma.product.findUnique({
+          where: { id: item.productId }
+        })
+
+        if (product && product.trackInventory) {
+          if (product.stockQuantity < item.quantity) {
+            stockErrors.push({
+              product: product.name,
+              available: product.stockQuantity,
+              requested: item.quantity
+            })
+          }
+        }
+      }
+    }
+
+    if (stockErrors.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Insufficient stock',
+          details: stockErrors
+        },
+        { status: 400 }
+      )
+    }
+
     // Calculate totals
     let subtotal = 0
     let taxAmount = 0
@@ -119,7 +149,7 @@ export async function POST(request: NextRequest) {
     const totalAmount = subtotal + taxAmount
     const balanceDue = totalAmount
 
-    // Create invoice in transaction
+    // Create invoice in transaction with stock deduction
     const invoice = await prisma.$transaction(async (tx) => {
       // Generate invoice number
       const invoiceNumber = generateInvoiceNumber(
@@ -175,6 +205,43 @@ export async function POST(request: NextRequest) {
           nextInvoiceNumber: settings.nextInvoiceNumber + 1
         }
       })
+
+      // Deduct stock for each product in the invoice
+      for (const item of items) {
+        if (item.productId) {
+          const product = await tx.product.findUnique({
+            where: { id: item.productId }
+          })
+
+          if (product && product.trackInventory) {
+            const previousQty = product.stockQuantity
+            const newQty = previousQty - item.quantity
+
+            // Update product stock
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stockQuantity: newQty
+              }
+            })
+
+            // Create stock movement record
+            await tx.stockMovement.create({
+              data: {
+                businessId,
+                productId: item.productId,
+                type: 'out',
+                quantity: item.quantity,
+                previousQty,
+                newQty,
+                invoiceId: newInvoice.id,
+                reason: `Stock sold via invoice ${invoiceNumber}`,
+                createdBy: createdById
+              }
+            })
+          }
+        }
+      }
 
       return newInvoice
     })
