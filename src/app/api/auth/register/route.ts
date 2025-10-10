@@ -10,32 +10,20 @@ export async function POST(request: NextRequest) {
       businessName,
       businessEmail,
       businessPhone,
-      industry,
-      businessType,
-      website,
-      description,
-
-      // Address
-      address,
-      city,
-      state,
-      zipCode,
-      country,
-
-      // Tax & Legal
+      businessAddress,
+      businessCity,
+      businessState,
+      businessCountry,
+      businessWebsite,
       taxId,
-      registrationNumber,
 
       // User Info
       firstName,
       lastName,
+      username,
       email,
+      phone,
       password,
-
-      // Settings
-      currency,
-      timezone,
-      fiscalYearEnd,
     } = body
 
     // Validation
@@ -66,6 +54,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if user email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'User email already registered' },
+        { status: 400 }
+      )
+    }
+
+    // Check if username already exists (if provided)
+    if (username) {
+      const existingUsername = await prisma.user.findUnique({
+        where: { username }
+      })
+
+      if (existingUsername) {
+        return NextResponse.json(
+          { error: 'Username already taken' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Hash password
     const hashedPassword = await hashPassword(password)
 
@@ -77,15 +91,15 @@ export async function POST(request: NextRequest) {
           name: businessName,
           email: businessEmail,
           phone: businessPhone,
-          address,
-          city,
-          state,
-          zipCode,
-          country: country || 'USA',
+          address: businessAddress,
+          city: businessCity,
+          state: businessState,
+          country: businessCountry || 'USA',
           taxId,
-          website,
-          currency: currency || 'USD',
-          timezone: timezone || 'UTC',
+          website: businessWebsite,
+          plan: 'business',
+          currency: 'USD',
+          timezone: 'UTC',
           approved: false, // Requires SuperAdmin approval
           status: 'active'
         }
@@ -116,10 +130,13 @@ export async function POST(request: NextRequest) {
         data: {
           businessId: business.id,
           email,
+          username: username || null,
           password: hashedPassword,
           firstName,
           lastName,
+          phone,
           role: 'admin', // First user is always admin
+          status: 'active'
         }
       })
 
@@ -141,7 +158,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Registration error:', error)
     return NextResponse.json(
-      { error: 'Failed to register business' },
+      { error: 'Failed to register business. Please try again.' },
       { status: 500 }
     )
   }

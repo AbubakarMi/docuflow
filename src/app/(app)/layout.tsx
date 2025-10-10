@@ -13,9 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { UserNav } from "@/components/user-nav";
-import { LayoutDashboard, FileText, Box, Settings, ChevronsUpDown, Users, ScanLine } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { LayoutDashboard, FileText, Box, Settings, Users, ScanLine } from "lucide-react";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -28,6 +26,9 @@ const menuItems = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  // TODO: Get business name from session/context
+  const businessName = "My Business";
+
   return (
       <SidebarProvider>
         <Sidebar>
@@ -63,20 +64,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
             <SidebarTrigger className="md:hidden"/>
             <div className="w-full flex-1">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="flex items-center gap-2">
-                           My Workspace
-                           <ChevronsUpDown className="h-4 w-4 text-muted-foreground"/>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                        <DropdownMenuItem>Workspace 1</DropdownMenuItem>
-                        <DropdownMenuItem>Workspace 2</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+              <h2 className="text-lg font-semibold text-slate-900">{businessName}</h2>
             </div>
-            <UserNav />
           </header>
           <main className="flex-1 p-4 lg:p-6">{children}</main>
         </SidebarInset>

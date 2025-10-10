@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyPassword } from '@/lib/auth'
+import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,6 +65,23 @@ export async function POST(request: NextRequest) {
     await prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() }
+    })
+
+    // Set authentication cookie
+    const cookieStore = cookies()
+    const sessionData = JSON.stringify({
+      userId: user.id,
+      businessId: user.businessId,
+      isSuperAdmin: user.isSuperAdmin,
+      email: user.email
+    })
+
+    cookieStore.set('auth-token', sessionData, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
     })
 
     // Return user data (without password)

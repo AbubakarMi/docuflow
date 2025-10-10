@@ -1,93 +1,113 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Logo } from '@/components/logo'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
-  FileText,
   Zap,
-  Shield,
+  Package,
   BarChart3,
   Users,
+  Shield,
   Clock,
-  CheckCircle2,
   ArrowRight,
-  Sparkles,
+  CheckCircle2,
   Star,
-} from "lucide-react";
-import { Logo } from "@/components/logo";
+  TrendingUp,
+  Building2
+} from 'lucide-react'
 
-const features = [
-  {
-    icon: Zap,
-    title: "Lightning Fast",
-    description: "Generate documents in seconds with AI-powered automation",
-    color: "bg-indigo-600",
-  },
-  {
-    icon: Shield,
-    title: "Secure & Safe",
-    description: "Enterprise-grade security with end-to-end encryption",
-    color: "bg-emerald-600",
-  },
-  {
-    icon: BarChart3,
-    title: "Advanced Analytics",
-    description: "Track and analyze your document workflow in real-time",
-    color: "bg-violet-600",
-  },
-  {
-    icon: Users,
-    title: "Team Collaboration",
-    description: "Work together seamlessly with your entire team",
-    color: "bg-sky-600",
-  },
-  {
-    icon: FileText,
-    title: "Smart Templates",
-    description: "AI-powered templates that adapt to your needs",
-    color: "bg-rose-600",
-  },
-  {
-    icon: Clock,
-    title: "Save Time",
-    description: "Automate repetitive tasks and boost productivity",
-    color: "bg-amber-600",
-  },
-];
+interface Stats {
+  activeUsers: number
+  documentsGenerated: number
+  activeBusinesses: number
+  uptime: string
+  support: string
+}
 
 export default function LandingPage() {
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex h-20 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Logo />
-            </div>
+  const [stats, setStats] = useState<Stats>({
+    activeUsers: 0,
+    documentsGenerated: 0,
+    activeBusinesses: 0,
+    uptime: '99.9%',
+    support: '24/7'
+  })
 
-            <div className="hidden items-center gap-8 md:flex">
-              <Link href="#features" className="text-base font-semibold text-slate-700 hover:text-indigo-600">
+  useEffect(() => {
+    fetch('/api/public/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.stats) {
+          setStats(data.stats)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const features = [
+    {
+      icon: Zap,
+      title: 'Lightning Fast Invoicing',
+      description: 'Create professional invoices in seconds with our intuitive interface'
+    },
+    {
+      icon: Package,
+      title: 'Inventory Management',
+      description: 'Track stock levels and get alerts when items are running low'
+    },
+    {
+      icon: BarChart3,
+      title: 'Real-Time Analytics',
+      description: 'Get insights into your business performance with comprehensive reports'
+    },
+    {
+      icon: Users,
+      title: 'Multi-User Support',
+      description: 'Collaborate with your team with role-based access control'
+    },
+    {
+      icon: Shield,
+      title: 'Multi-Tenant Security',
+      description: 'Enterprise-grade security ensures your data is isolated and protected'
+    },
+    {
+      icon: Clock,
+      title: 'Automatic Stock Updates',
+      description: 'Inventory automatically adjusts when invoices are created'
+    }
+  ]
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <Logo />
+
+            <div className="hidden md:flex items-center gap-8">
+              <Link href="#features" className="text-sm font-medium text-slate-700 hover:text-slate-900">
                 Features
               </Link>
-              <Link href="#benefits" className="text-base font-semibold text-slate-700 hover:text-indigo-600">
+              <Link href="#benefits" className="text-sm font-medium text-slate-700 hover:text-slate-900">
                 Benefits
               </Link>
-              <Link href="#pricing" className="text-base font-semibold text-slate-700 hover:text-indigo-600">
-                Pricing
+              <Link href="#stats" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+                About
               </Link>
             </div>
 
             <div className="flex items-center gap-4">
               <Link href="/login">
-                <Button variant="ghost" className="text-base font-semibold">
+                <Button variant="ghost" size="sm">
                   Sign In
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button className="bg-indigo-600 text-base font-semibold hover:bg-indigo-700">
+                <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
                   Get Started
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -98,54 +118,73 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-white py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="relative py-20 sm:py-24 lg:py-32">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="mb-8 bg-indigo-100 px-4 py-2 text-indigo-700 hover:bg-indigo-100">
-              <Sparkles className="mr-2 h-4 w-4" />
-              AI-Powered Document Automation
-            </Badge>
+            <div className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-4 py-1.5 mb-8">
+              <span className="text-sm font-medium text-indigo-600">
+                Multi-Tenant Invoice & Inventory System
+              </span>
+            </div>
 
-            <h1 className="mb-6 text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
-              Transform Your Document Workflow
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+              Invoice & Inventory Management Made Simple
             </h1>
 
-            <p className="mb-10 text-xl leading-8 text-slate-600">
-              Generate, manage, and automate thousands of documents with AI.
-              Join 50,000+ teams who trust DocuFlow for their document needs.
+            <p className="mt-6 text-lg leading-8 text-slate-600">
+              Streamline your business operations with our all-in-one platform. Create invoices,
+              manage inventory, and gain insights - all in one secure place.
             </p>
 
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup">
-                <Button size="lg" className="h-14 bg-indigo-600 px-8 text-lg font-semibold hover:bg-indigo-700">
+                <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link href="#features">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-semibold">
-                  Watch Demo
+              <Link href="/login">
+                <Button size="lg" variant="outline">
+                  Sign In
                 </Button>
               </Link>
             </div>
 
-            {/* Stats */}
-            <div className="mt-16 grid grid-cols-2 gap-8 sm:grid-cols-4">
+            {/* Real-Time Stats */}
+            <div id="stats" className="mt-20 grid grid-cols-2 gap-8 sm:grid-cols-4">
               <div>
-                <p className="text-4xl font-bold text-indigo-600">10M+</p>
-                <p className="mt-2 text-sm font-medium text-slate-600">Documents Generated</p>
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-3xl font-bold text-slate-900">
+                    {stats.documentsGenerated.toLocaleString()}
+                  </p>
+                  <TrendingUp className="h-5 w-5 text-indigo-600" />
+                </div>
+                <p className="mt-2 text-sm font-medium text-slate-600">Invoices Generated</p>
               </div>
+
               <div>
-                <p className="text-4xl font-bold text-emerald-600">50K+</p>
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-3xl font-bold text-slate-900">
+                    {stats.activeUsers.toLocaleString()}
+                  </p>
+                  <Users className="h-5 w-5 text-indigo-600" />
+                </div>
                 <p className="mt-2 text-sm font-medium text-slate-600">Active Users</p>
               </div>
+
               <div>
-                <p className="text-4xl font-bold text-violet-600">99.9%</p>
-                <p className="mt-2 text-sm font-medium text-slate-600">Uptime</p>
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-3xl font-bold text-slate-900">
+                    {stats.activeBusinesses.toLocaleString()}
+                  </p>
+                  <Building2 className="h-5 w-5 text-indigo-600" />
+                </div>
+                <p className="mt-2 text-sm font-medium text-slate-600">Businesses</p>
               </div>
+
               <div>
-                <p className="text-4xl font-bold text-amber-600">24/7</p>
-                <p className="mt-2 text-sm font-medium text-slate-600">Support</p>
+                <p className="text-3xl font-bold text-slate-900">{stats.uptime}</p>
+                <p className="mt-2 text-sm font-medium text-slate-600">Uptime</p>
               </div>
             </div>
           </div>
@@ -153,80 +192,134 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="bg-slate-50 py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section id="features" className="py-24 sm:py-32 bg-slate-50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Everything you need to succeed
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              Everything You Need to Run Your Business
             </h2>
-            <p className="text-lg leading-8 text-slate-600">
-              Powerful features designed to streamline your document workflow
+            <p className="mt-4 text-lg text-slate-600">
+              Powerful features designed to save you time and help you grow
             </p>
           </div>
 
-          <div className="mx-auto mt-16 grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
-              <Card key={feature.title} className="border-slate-200 transition-shadow hover:shadow-lg">
-                <CardContent className="p-8">
-                  <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl ${feature.color}`}>
-                    <feature.icon className="h-7 w-7 text-white" />
-                  </div>
-                  <h3 className="mb-3 text-xl font-semibold text-slate-900">
-                    {feature.title}
-                  </h3>
-                  <p className="text-base leading-7 text-slate-600">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="mx-auto mt-16 grid max-w-7xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => {
+              const Icon = feature.icon
+              return (
+                <Card key={feature.title} className="border-slate-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-600 mb-4">
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section id="benefits" className="py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              Why Choose DocuFlow?
+            </h2>
+            <p className="mt-4 text-lg text-slate-600">
+              Built specifically for businesses that need reliable invoice and inventory management
+            </p>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-3">
+            <Card className="border-slate-200">
+              <CardContent className="p-8">
+                <CheckCircle2 className="h-12 w-12 mb-4 text-indigo-600" />
+                <h3 className="text-xl font-bold mb-3 text-slate-900">Multi-Tenant Security</h3>
+                <p className="text-slate-600">
+                  Complete data isolation ensures each business's information is completely private and secure.
+                  Your data is yours alone.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200">
+              <CardContent className="p-8">
+                <CheckCircle2 className="h-12 w-12 mb-4 text-indigo-600" />
+                <h3 className="text-xl font-bold mb-3 text-slate-900">Automatic Inventory</h3>
+                <p className="text-slate-600">
+                  Stock levels automatically update when you generate invoices. No manual tracking needed -
+                  the system does it for you.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200">
+              <CardContent className="p-8">
+                <CheckCircle2 className="h-12 w-12 mb-4 text-indigo-600" />
+                <h3 className="text-xl font-bold mb-3 text-slate-900">Business Analytics</h3>
+                <p className="text-slate-600">
+                  Real-time dashboards show you exactly how your business is performing with detailed
+                  sales and inventory reports.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Social Proof */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="py-16 border-y bg-slate-50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-center gap-8">
             <div className="flex items-center gap-2">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-amber-500 text-amber-500" />
+                  <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <span className="text-base font-semibold text-slate-700">4.9/5 Rating</span>
+              <span className="text-sm font-semibold text-slate-700">Trusted by Businesses</span>
             </div>
-            <Badge className="bg-emerald-100 px-4 py-2 text-emerald-700 hover:bg-emerald-100">
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              SOC 2 Certified
-            </Badge>
-            <Badge className="bg-indigo-100 px-4 py-2 text-indigo-700 hover:bg-indigo-100">
-              150+ Countries Worldwide
-            </Badge>
+            <div className="flex items-center gap-2 rounded-full bg-white border border-slate-200 px-4 py-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <span className="text-sm font-medium text-slate-700">Secure & Encrypted</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-white border border-slate-200 px-4 py-2">
+              <Shield className="h-4 w-4 text-indigo-600" />
+              <span className="text-sm font-medium text-slate-700">Multi-Tenant Architecture</span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="bg-indigo-600 py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="py-24 sm:py-32 bg-indigo-600">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="mb-6 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              Ready to get started?
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Ready to Transform Your Business?
             </h2>
-            <p className="mb-10 text-xl leading-8 text-indigo-100">
-              Join thousands of teams already using DocuFlow. Start your free trial today.
+            <p className="mt-6 text-lg leading-8 text-indigo-100">
+              Join businesses already using DocuFlow for their invoicing and inventory management needs.
+              Start free today - no credit card required.
             </p>
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup">
-                <Button size="lg" className="h-14 bg-white px-8 text-lg font-semibold text-indigo-600 hover:bg-slate-50">
-                  Start Free Trial
+                <Button size="lg" variant="secondary" className="bg-white text-indigo-600 hover:bg-slate-50">
+                  Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/login">
-                <Button size="lg" variant="outline" className="h-14 border-white px-8 text-lg font-semibold text-white hover:bg-indigo-700">
-                  Contact Sales
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-indigo-700">
+                  Sign In to Your Account
                 </Button>
               </Link>
             </div>
@@ -235,87 +328,63 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-white py-16">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+      <footer className="bg-white border-t py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <Logo />
-              <p className="mt-4 text-sm leading-6 text-slate-600">
-                Document automation for modern teams.
+              <p className="mt-5 text-base text-slate-700 leading-relaxed">
+                Professional invoice and inventory management for modern businesses. Multi-tenant, secure, and easy to use.
               </p>
             </div>
 
             <div>
-              <h3 className="mb-4 text-sm font-semibold text-slate-900">Product</h3>
-              <ul className="space-y-3 text-sm">
+              <h3 className="text-base font-bold text-slate-900 mb-5">Product</h3>
+              <ul className="space-y-4">
                 <li>
-                  <Link href="#features" className="text-slate-600 hover:text-indigo-600">
+                  <Link href="#features" className="text-base text-slate-700 hover:text-indigo-600 transition-colors">
                     Features
                   </Link>
                 </li>
                 <li>
-                  <Link href="#pricing" className="text-slate-600 hover:text-indigo-600">
-                    Pricing
+                  <Link href="/signup" className="text-base text-slate-700 hover:text-indigo-600 transition-colors">
+                    Get Started
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-slate-600 hover:text-indigo-600">
-                    Templates
+                  <Link href="/login" className="text-base text-slate-700 hover:text-indigo-600 transition-colors">
+                    Sign In
                   </Link>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="mb-4 text-sm font-semibold text-slate-900">Company</h3>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <Link href="#" className="text-slate-600 hover:text-indigo-600">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-slate-600 hover:text-indigo-600">
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-slate-600 hover:text-indigo-600">
-                    Careers
-                  </Link>
-                </li>
+              <h3 className="text-base font-bold text-slate-900 mb-5">Features</h3>
+              <ul className="space-y-4">
+                <li className="text-base text-slate-700">Invoice Generation</li>
+                <li className="text-base text-slate-700">Inventory Management</li>
+                <li className="text-base text-slate-700">Business Analytics</li>
               </ul>
             </div>
 
             <div>
-              <h3 className="mb-4 text-sm font-semibold text-slate-900">Legal</h3>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <Link href="#" className="text-slate-600 hover:text-indigo-600">
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-slate-600 hover:text-indigo-600">
-                    Terms
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-slate-600 hover:text-indigo-600">
-                    Security
-                  </Link>
-                </li>
+              <h3 className="text-base font-bold text-slate-900 mb-5">Support</h3>
+              <ul className="space-y-4">
+                <li className="text-base text-slate-700">24/7 Support</li>
+                <li className="text-base text-slate-700">Documentation</li>
+                <li className="text-base text-slate-700">Contact Us</li>
               </ul>
             </div>
           </div>
 
-          <div className="mt-12 border-t pt-8 text-center">
-            <p className="text-sm text-slate-600">
-              &copy; 2025 DocuFlow. All rights reserved.
+          <div className="mt-16 border-t pt-10">
+            <p className="text-center text-base text-slate-700 font-medium">
+              &copy; {new Date().getFullYear()} DocuFlow. All rights reserved.
             </p>
           </div>
         </div>
       </footer>
     </div>
-  );
+  )
 }
