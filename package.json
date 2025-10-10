@@ -13,7 +13,8 @@
     "db:setup": "tsx scripts/setup-db.ts",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset && npm run db:setup",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "create:superadmin": "tsx scripts/create-superadmin.ts"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",

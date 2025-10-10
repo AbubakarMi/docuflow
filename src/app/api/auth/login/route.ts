@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if business is active
-    if (user.business.status !== 'active') {
+    // Check if business is active (skip for SuperAdmin)
+    if (!user.isSuperAdmin && user.business && user.business.status !== 'active') {
       return NextResponse.json(
         { error: 'Business account is suspended' },
         { status: 403 }
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user: userWithoutPassword,
+      isSuperAdmin: user.isSuperAdmin,
     })
 
   } catch (error) {

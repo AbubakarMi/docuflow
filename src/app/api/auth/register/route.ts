@@ -10,25 +10,46 @@ export async function POST(request: NextRequest) {
       businessName,
       businessEmail,
       businessPhone,
+      industry,
+      businessType,
+      website,
+      description,
+
+      // Address
       address,
       city,
       state,
       zipCode,
       country,
+
+      // Tax & Legal
       taxId,
-      website,
+      registrationNumber,
 
       // User Info
       firstName,
       lastName,
       email,
       password,
+
+      // Settings
+      currency,
+      timezone,
+      fiscalYearEnd,
     } = body
 
     // Validation
     if (!businessName || !businessEmail || !firstName || !lastName || !email || !password) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Password validation
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters' },
         { status: 400 }
       )
     }
@@ -63,16 +84,28 @@ export async function POST(request: NextRequest) {
           country: country || 'USA',
           taxId,
           website,
+          currency: currency || 'USD',
+          timezone: timezone || 'UTC',
         }
       })
+
+      // Generate invoice prefix from business name
+      const invoicePrefix = businessName
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 3) || 'INV'
 
       // Create default business settings
       await tx.businessSettings.create({
         data: {
           businessId: business.id,
-          invoicePrefix: 'INV',
+          invoicePrefix,
           nextInvoiceNumber: 1001,
           paymentTermsDays: 30,
+          invoiceTerms: 'Payment is due within 30 days from the invoice date. Late payments may be subject to additional fees.',
+          invoiceNotes: 'Thank you for your business!',
         }
       })
 
