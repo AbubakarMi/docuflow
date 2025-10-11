@@ -46,12 +46,14 @@ model Business {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  users       User[]
-  customers   Customer[]
-  products    Product[]
-  invoices    Invoice[]
-  payments    Payment[]
-  settings    BusinessSettings?
+  users         User[]
+  customers     Customer[]
+  products      Product[]
+  invoices      Invoice[]
+  payments      Payment[]
+  settings      BusinessSettings?
+  chatMessages  ChatMessage[]
+  notifications Notification[]
 
   @@index([email])
   @@index([status])
@@ -109,6 +111,8 @@ model User {
   // Relations
   invoicesCreated Invoice[] @relation("InvoiceCreator")
   passwordReset   PasswordReset?
+  chatMessages    ChatMessage[]
+  notifications   Notification[]
 
   @@index([businessId])
   @@index([email])
@@ -380,4 +384,53 @@ model Template {
   updatedAt   DateTime @updatedAt
 
   @@map("templates")
+}
+
+// ============================================
+// LIVE CHAT SYSTEM
+// ============================================
+
+model ChatMessage {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  senderId   String
+  sender     User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  message    String   @db.Text
+  isRead     Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([senderId])
+  @@map("chat_messages")
+}
+
+// ============================================
+// NOTIFICATION SYSTEM
+// ============================================
+
+model Notification {
+  id         String   @id @default(cuid())
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  userId     String?  // If null, it's for SuperAdmin
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title      String
+  message    String   @db.Text
+  type       String   // info, success, warning, error
+  actionUrl  String?  // Optional URL to navigate to
+  isRead     Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+
+  @@index([businessId])
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
 }
