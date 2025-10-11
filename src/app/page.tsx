@@ -312,13 +312,13 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup">
-                <Button size="lg" variant="secondary" className="bg-white text-indigo-600 hover:bg-slate-50">
+                <Button size="lg" className="bg-white text-indigo-600 hover:bg-slate-100 font-semibold h-12 px-8 text-base">
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/login">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-indigo-700">
+                <Button size="lg" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-indigo-600 font-semibold h-12 px-8 text-base transition-all">
                   Sign In to Your Account
                 </Button>
               </Link>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
+import { sendRegistrationPendingEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
       businessCity,
       businessState,
       businessCountry,
+      currency,
       businessWebsite,
       taxId,
 
@@ -98,8 +100,8 @@ export async function POST(request: NextRequest) {
           taxId,
           website: businessWebsite,
           plan: 'business',
-          currency: 'USD',
-          timezone: 'UTC',
+          currency: currency || 'NGN',
+          timezone: 'Africa/Lagos',
           approved: false, // Requires SuperAdmin approval
           status: 'active'
         }
@@ -143,9 +145,21 @@ export async function POST(request: NextRequest) {
       return { business, user }
     })
 
+    // Send pending registration email
+    try {
+      await sendRegistrationPendingEmail(
+        email,
+        businessName,
+        `${firstName} ${lastName}`
+      )
+    } catch (emailError) {
+      console.error('Failed to send registration email:', emailError)
+      // Don't fail the registration if email fails
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Business registered successfully! Please wait for SuperAdmin approval.',
+      message: 'Business registered successfully! Please check your email for further instructions.',
       pendingApproval: true,
       data: {
         businessId: result.business.id,

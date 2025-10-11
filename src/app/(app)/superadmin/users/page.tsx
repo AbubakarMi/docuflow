@@ -5,7 +5,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { User, Building2, Mail, Search, Shield, Clock } from "lucide-react"
+import { User, Building2, Mail, Search, Shield, Clock, TrendingUp, Activity, Users } from "lucide-react"
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts'
 
 interface UserData {
   id: string
@@ -26,14 +41,26 @@ interface UserData {
   }
 }
 
+interface UserStats {
+  totalUsers: number
+  recentUsers: number
+  activeUsers: number
+  userGrowth: Array<{ month: string; count: number }>
+  usersByBusiness: Array<{ name: string; users: number }>
+  usersByRole: Array<{ role: string; count: number }>
+  usersByStatus: Array<{ status: string; count: number }>
+}
+
 export default function UsersManagementPage() {
   const [users, setUsers] = useState<UserData[]>([])
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([])
+  const [userStats, setUserStats] = useState<UserStats | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchUsers()
+    fetchUserStats()
   }, [])
 
   useEffect(() => {
@@ -70,6 +97,19 @@ export default function UsersManagementPage() {
     }
   }
 
+  const fetchUserStats = async () => {
+    try {
+      const response = await fetch('/api/superadmin/users/stats')
+      const data = await response.json()
+
+      if (data.success) {
+        setUserStats(data.stats)
+      }
+    } catch (error) {
+      console.error('Failed to fetch user stats:', error)
+    }
+  }
+
   const getRoleBadge = (role: string) => {
     if (role === 'admin') {
       return <Badge variant="default">Admin</Badge>
@@ -99,87 +139,238 @@ export default function UsersManagementPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8 max-w-[1800px] mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground">View and manage all users across all businesses</p>
+          <h1 className="text-4xl font-bold tracking-tight">User Management</h1>
+          <p className="text-lg text-muted-foreground mt-1">View and manage all users across all businesses</p>
         </div>
-        <Badge variant="outline" className="text-lg px-4 py-2">
+        <Badge variant="outline" className="text-base px-5 py-2.5">
           {users.length} Total Users
         </Badge>
       </div>
 
-      {/* Search and Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
+      {/* Stats Cards */}
+      <div className="grid gap-5 md:grid-cols-4">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Total Users</CardTitle>
+            <User className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
+            <div className="text-3xl font-bold">{users.length}</div>
+            <p className="text-sm text-muted-foreground mt-1">Across all businesses</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Shield className="h-4 w-4 text-green-600" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Active Users</CardTitle>
+            <Shield className="h-5 w-5 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-3xl font-bold text-green-600">
               {users.filter(u => u.status === 'active').length}
             </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {((users.filter(u => u.status === 'active').length / users.length) * 100).toFixed(0)}% of total
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Admin Users</CardTitle>
-            <Shield className="h-4 w-4 text-blue-600" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Admin Users</CardTitle>
+            <Shield className="h-5 w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-3xl font-bold text-blue-600">
               {users.filter(u => u.role === 'admin').length}
             </div>
+            <p className="text-sm text-muted-foreground mt-1">Business administrators</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Businesses</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Businesses</CardTitle>
+            <Building2 className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {new Set(users.map(u => u.business?.id).filter(Boolean)).size}
             </div>
+            <p className="text-sm text-muted-foreground mt-1">Registered businesses</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* User Analytics Charts */}
+      {userStats && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* User Growth Over Time */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <TrendingUp className="h-6 w-6 text-indigo-600" />
+                User Growth Over Time
+              </CardTitle>
+              <CardDescription className="text-base">User registrations over the last 12 months</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ResponsiveContainer width="100%" height={320}>
+                <LineChart data={userStats.userGrowth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#4f46e5"
+                    strokeWidth={2}
+                    name="Users Registered"
+                    dot={{ fill: '#4f46e5', r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Users by Business */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Building2 className="h-6 w-6 text-blue-600" />
+                Users by Business (Top 10)
+              </CardTitle>
+              <CardDescription className="text-base">User distribution across businesses</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={userStats.usersByBusiness}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar
+                    dataKey="users"
+                    fill="#3b82f6"
+                    name="Users"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Users by Role */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Users className="h-6 w-6 text-purple-600" />
+                Users by Role
+              </CardTitle>
+              <CardDescription className="text-base">Role distribution</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ResponsiveContainer width="100%" height={320}>
+                <PieChart>
+                  <Pie
+                    data={userStats.usersByRole}
+                    dataKey="count"
+                    nameKey="role"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={(entry) => `${entry.role}: ${entry.count}`}
+                  >
+                    {userStats.usersByRole.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={['#4f46e5', '#3b82f6', '#8b5cf6', '#06b6d4'][index % 4]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Users by Status */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Activity className="h-6 w-6 text-green-600" />
+                Users by Status
+              </CardTitle>
+              <CardDescription className="text-base">Status distribution</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ResponsiveContainer width="100%" height={320}>
+                <PieChart>
+                  <Pie
+                    data={userStats.usersByStatus}
+                    dataKey="count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={(entry) => `${entry.status}: ${entry.count}`}
+                  >
+                    {userStats.usersByStatus.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.status === 'active' ? '#10b981' : entry.status === 'suspended' ? '#ef4444' : '#6b7280'}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Users Table */}
-      <Card>
-        <CardHeader>
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-5">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>All Users</CardTitle>
-              <CardDescription>Complete list of users across all businesses</CardDescription>
+              <CardTitle className="text-2xl">All Users</CardTitle>
+              <CardDescription className="text-base mt-1">Complete list of users across all businesses</CardDescription>
             </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative w-72">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-11"
               />
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="rounded-md border">
             <Table>
               <TableHeader>

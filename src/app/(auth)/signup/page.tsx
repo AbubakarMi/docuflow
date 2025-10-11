@@ -37,6 +37,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
   // Business Information
@@ -47,6 +48,7 @@ const formSchema = z.object({
   businessCity: z.string().min(2, { message: "City is required" }),
   businessState: z.string().min(2, { message: "State/Province is required" }),
   businessCountry: z.string().min(2, { message: "Country is required" }),
+  currency: z.string().min(3, { message: "Please select a currency" }),
   businessWebsite: z.string().url({ message: "Valid website URL required" }).optional().or(z.literal("")),
   taxId: z.string().optional(),
 
@@ -86,6 +88,7 @@ export default function SignupPage() {
       businessCity: "",
       businessState: "",
       businessCountry: "",
+      currency: "NGN",
       businessWebsite: "",
       taxId: "",
       firstName: "",
@@ -332,6 +335,33 @@ export default function SignupPage() {
                         <FormControl>
                           <Input placeholder="USA" {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Currency *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="NGN">🇳🇬 Nigerian Naira (NGN)</SelectItem>
+                            <SelectItem value="USD">🇺🇸 US Dollar (USD)</SelectItem>
+                            <SelectItem value="EUR">🇪🇺 Euro (EUR)</SelectItem>
+                            <SelectItem value="GBP">🇬🇧 British Pound (GBP)</SelectItem>
+                            <SelectItem value="ZAR">🇿🇦 South African Rand (ZAR)</SelectItem>
+                            <SelectItem value="KES">🇰🇪 Kenyan Shilling (KES)</SelectItem>
+                            <SelectItem value="GHS">🇬🇭 Ghanaian Cedi (GHS)</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

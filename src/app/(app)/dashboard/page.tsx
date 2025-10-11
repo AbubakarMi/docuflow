@@ -19,66 +19,66 @@ const NairaIcon = () => (
 
 export default function DashboardPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+    <div className="flex flex-col gap-8 max-w-[1800px] mx-auto">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Total Revenue</CardTitle>
             <NairaIcon />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(4523189, 'NGN')}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold">{formatCurrency(4523189, 'NGN')}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               +20.1% from last month
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Total Cost</CardTitle>
             <NairaIcon />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(2111245, 'NGN')}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold">{formatCurrency(2111245, 'NGN')}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               +18.1% from last month
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profit</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Profit</CardTitle>
+            <TrendingUp className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-500">{formatCurrency(2411944, 'NGN')}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold text-emerald-500">{formatCurrency(2411944, 'NGN')}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               +22.3% from last month
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documents Generated</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Documents Generated</CardTitle>
+            <FileText className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+573</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold">+573</div>
+            <p className="text-sm text-muted-foreground mt-1">
               +201 since last hour
             </p>
           </CardContent>
         </Card>
       </div>
       <div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Profit Overview</CardTitle>
-            <CardDescription>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl">Profit Overview</CardTitle>
+            <CardDescription className="text-base mt-1">
               Your profit analytics for the last 12 months.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             <Overview />
           </CardContent>
         </Card>

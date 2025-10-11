@@ -108,6 +108,7 @@ model User {
 
   // Relations
   invoicesCreated Invoice[] @relation("InvoiceCreator")
+  passwordReset   PasswordReset?
 
   @@index([businessId])
   @@index([email])
@@ -342,4 +343,17 @@ model Payment {
   @@index([businessId])
   @@index([invoiceId])
   @@map("payments")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  otp       String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
 }

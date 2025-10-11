@@ -22,6 +22,7 @@ import {
 
 export default function InvoicesPage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   // Mock data
   const stats = {
@@ -60,6 +61,33 @@ export default function InvoicesPage() {
       status: "draft"
     },
   ]
+
+  const handleDownloadPDF = async (invoiceId: string, invoiceNumber: string) => {
+    try {
+      setDownloadingId(invoiceId)
+
+      const response = await fetch(`/api/invoices/${invoiceId}/pdf`)
+
+      if (!response.ok) {
+        throw new Error('Failed to download PDF')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Invoice-${invoiceNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      alert('Failed to download PDF. Please try again.')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { label: string; className: string }> = {
@@ -194,9 +222,14 @@ export default function InvoicesPage() {
                           <Send className="h-4 w-4 mr-1" />
                           Send
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadPDF(invoice.id, invoice.invoiceNumber)}
+                          disabled={downloadingId === invoice.id}
+                        >
                           <Download className="h-4 w-4 mr-1" />
-                          PDF
+                          {downloadingId === invoice.id ? 'Downloading...' : 'PDF'}
                         </Button>
                       </div>
                     </TableCell>

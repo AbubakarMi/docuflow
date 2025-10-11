@@ -16,10 +16,21 @@ import {
   Activity,
   Eye,
   AlertCircle,
-  Clock
+  Clock,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   LineChart,
   Line,
@@ -77,6 +88,7 @@ export default function SuperAdminDashboard() {
   const [userStats, setUserStats] = useState<UserStats | null>(null)
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [loading, setLoading] = useState(true)
+  const [viewDialog, setViewDialog] = useState<{ open: boolean; business: Business | null }>({ open: false, business: null })
 
   useEffect(() => {
     fetchData()
@@ -176,7 +188,7 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* System Stats */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold">Total Businesses</CardTitle>
@@ -212,21 +224,6 @@ export default function SuperAdminDashboard() {
             <div className="text-3xl font-bold">{systemStats?.totalInvoices || 0}</div>
             <p className="text-sm text-muted-foreground mt-1">
               System-wide
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold">Total Revenue</CardTitle>
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              ${((systemStats?.totalRevenue || 0) / 1000).toFixed(0)}k
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              All businesses combined
             </p>
           </CardContent>
         </Card>
@@ -482,7 +479,6 @@ export default function SuperAdminDashboard() {
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Users</TableHead>
                   <TableHead className="text-right">Invoices</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -490,7 +486,7 @@ export default function SuperAdminDashboard() {
               <TableBody>
                 {filteredBusinesses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No businesses found
                     </TableCell>
                   </TableRow>
@@ -511,12 +507,9 @@ export default function SuperAdminDashboard() {
                       <TableCell>{getStatusBadge(business.status)}</TableCell>
                       <TableCell className="text-right">{business.stats.users}</TableCell>
                       <TableCell className="text-right">{business.stats.invoices}</TableCell>
-                      <TableCell className="text-right font-semibold">
-                        ${business.stats.revenue.toLocaleString()}
-                      </TableCell>
                       <TableCell>{new Date(business.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => setViewDialog({ open: true, business })}>
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
@@ -587,6 +580,92 @@ export default function SuperAdminDashboard() {
           </Card>
         </Link>
       </div>
+
+      {/* View Business Details Dialog */}
+      <Dialog open={viewDialog.open} onOpenChange={(open) => setViewDialog({ ...viewDialog, open })}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Business Details</DialogTitle>
+            <DialogDescription>Complete information about this business</DialogDescription>
+          </DialogHeader>
+          {viewDialog.business && (
+            <div className="space-y-6">
+              {/* Business Header */}
+              <div className="flex items-start gap-4 pb-4 border-b">
+                <div className="bg-indigo-50 p-4 rounded-xl">
+                  <Building2 className="h-8 w-8 text-indigo-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold">{viewDialog.business.name}</h3>
+                  <div className="flex items-center gap-3 mt-2">
+                    {getPlanBadge(viewDialog.business.plan)}
+                    {getStatusBadge(viewDialog.business.status)}
+                    {viewDialog.business.approved ? (
+                      <Badge variant="success">Approved</Badge>
+                    ) : (
+                      <Badge variant="secondary">Pending Approval</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-base text-slate-900">Contact Information</h4>
+                <div className="grid md:grid-cols-2 gap-4 bg-slate-50 rounded-lg p-5">
+                  <div className="flex items-start gap-3">
+                    <Mail className="h-5 w-5 mt-0.5 text-indigo-600" />
+                    <div>
+                      <p className="text-sm font-semibold">Email</p>
+                      <p className="text-base text-muted-foreground">{viewDialog.business.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Calendar className="h-5 w-5 mt-0.5 text-indigo-600" />
+                    <div>
+                      <p className="text-sm font-semibold">Joined</p>
+                      <p className="text-base text-muted-foreground">
+                        {new Date(viewDialog.business.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statistics */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-base text-slate-900">Statistics</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-indigo-600">
+                        {viewDialog.business.stats.users}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Total Invoices</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-blue-600">
+                        {viewDialog.business.stats.invoices}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

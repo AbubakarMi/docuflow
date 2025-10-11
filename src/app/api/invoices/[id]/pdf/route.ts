@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getInvoicePDFBlob } from '@/lib/invoice-pdf'
 
 export async function GET(
   request: NextRequest,
@@ -15,8 +16,7 @@ export async function GET(
           include: {
             product: true
           }
-        },
-        payments: true
+        }
       }
     })
 
@@ -27,57 +27,68 @@ export async function GET(
       )
     }
 
-    // Return data for client-side PDF generation
-    return NextResponse.json({
-      invoice: {
-        invoiceNumber: invoice.invoiceNumber,
-        issueDate: invoice.issueDate.toISOString().split('T')[0],
-        dueDate: invoice.dueDate.toISOString().split('T')[0],
-        status: invoice.status
-      },
-      business: {
-        name: invoice.business.name,
-        email: invoice.business.email,
-        phone: invoice.business.phone || undefined,
-        address: invoice.business.address || undefined,
-        city: invoice.business.city || undefined,
-        state: invoice.business.state || undefined,
-        zipCode: invoice.business.zipCode || undefined,
-        logo: invoice.business.logo || undefined
-      },
-      customer: {
-        name: invoice.customer.name,
-        email: invoice.customer.email,
-        company: invoice.customer.company || undefined,
-        address: invoice.customer.address || undefined,
-        city: invoice.customer.city || undefined,
-        state: invoice.customer.state || undefined,
-        zipCode: invoice.customer.zipCode || undefined
-      },
+    // Format data for PDF generation
+    const pdfData = {
+      invoiceNumber: invoice.invoiceNumber,
+      invoiceDate: invoice.issueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      dueDate: invoice.dueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      status: invoice.status,
+
+      // Business Info
+      businessName: invoice.business.name,
+      businessEmail: invoice.business.email,
+      businessPhone: invoice.business.phone || undefined,
+      businessAddress: invoice.business.address || undefined,
+      businessCity: invoice.business.city || undefined,
+      businessState: invoice.business.state || undefined,
+      businessCountry: invoice.business.country || undefined,
+
+      // Customer Info
+      customerName: invoice.customer.company || invoice.customer.name,
+      customerEmail: invoice.customer.email,
+      customerPhone: invoice.customer.phone || undefined,
+      customerAddress: invoice.customer.address || undefined,
+      customerCity: invoice.customer.city || undefined,
+      customerState: invoice.customer.state || undefined,
+      customerCountry: invoice.customer.country || undefined,
+
+      // Invoice Items
       items: invoice.items.map(item => ({
-        description: item.description,
+        productName: item.product?.name || item.description,
+        description: item.description !== item.product?.name ? item.description : undefined,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        taxRate: item.taxRate,
-        discountPercent: item.discountPercent,
-        amount: item.amount
+        price: parseFloat(item.unitPrice.toString()),
+        amount: parseFloat(item.amount.toString())
       })),
-      totals: {
-        subtotal: invoice.subtotal,
-        taxAmount: invoice.taxAmount,
-        discountAmount: invoice.discountAmount,
-        totalAmount: invoice.totalAmount,
-        paidAmount: invoice.paidAmount,
-        balanceDue: invoice.balanceDue
-      },
+
+      // Totals
+      subtotal: parseFloat(invoice.subtotal.toString()),
+      taxRate: invoice.taxAmount > 0 ? parseFloat(((invoice.taxAmount / invoice.subtotal) * 100).toFixed(2)) : undefined,
+      taxAmount: invoice.taxAmount > 0 ? parseFloat(invoice.taxAmount.toString()) : undefined,
+      discount: invoice.discountAmount > 0 ? parseFloat(invoice.discountAmount.toString()) : undefined,
+      total: parseFloat(invoice.totalAmount.toString()),
+      currency: invoice.business.currency,
+
+      // Optional
       notes: invoice.notes || undefined,
       terms: invoice.terms || undefined
+    }
+
+    // Generate PDF
+    const pdfBlob = getInvoicePDFBlob(pdfData)
+
+    // Return PDF as response
+    return new NextResponse(pdfBlob, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="Invoice-${invoice.invoiceNumber}.pdf"`
+      }
     })
 
   } catch (error) {
-    console.error('Error generating PDF data:', error)
+    console.error('Error generating PDF:', error)
     return NextResponse.json(
-      { error: 'Failed to generate PDF data' },
+      { error: 'Failed to generate PDF' },
       { status: 500 }
     )
   }

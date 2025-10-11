@@ -29,6 +29,7 @@ export default function AdminInvoicesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   // Mock data - replace with actual API calls
   const invoiceStats = {
@@ -74,6 +75,33 @@ export default function AdminInvoicesPage() {
       status: "overdue"
     },
   ]
+
+  const handleDownloadPDF = async (invoiceId: string, invoiceNumber: string) => {
+    try {
+      setDownloadingId(invoiceId)
+
+      const response = await fetch(`/api/invoices/${invoiceId}/pdf`)
+
+      if (!response.ok) {
+        throw new Error('Failed to download PDF')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Invoice-${invoiceNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      alert('Failed to download PDF. Please try again.')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; variant: any }> = {
@@ -274,7 +302,13 @@ export default function AdminInvoicesPage() {
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDownloadPDF(invoice.id, invoice.invoiceNumber)}
+                          disabled={downloadingId === invoice.id}
+                          title="Download PDF"
+                        >
                           <Download className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon">
