@@ -3,9 +3,21 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { User, Building2, Mail, Search, Shield, Clock, TrendingUp, Activity, Users } from "lucide-react"
+import { User, Building2, Mail, Search, Shield, Clock, TrendingUp, Activity, Users, Ban, CheckCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   LineChart,
   Line,
@@ -57,6 +69,13 @@ export default function UsersManagementPage() {
   const [userStats, setUserStats] = useState<UserStats | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
+  const [suspendDialog, setSuspendDialog] = useState<{ open: boolean; businessId: string | null; businessName: string; action: 'suspend' | 'activate' }>({
+    open: false,
+    businessId: null,
+    businessName: '',
+    action: 'suspend'
+  })
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchUsers()
@@ -125,6 +144,42 @@ export default function UsersManagementPage() {
     }
     const { variant, label } = config[status] || config.active
     return <Badge variant={variant}>{label}</Badge>
+  }
+
+  const handleSuspendBusiness = async () => {
+    if (!suspendDialog.businessId) return
+
+    try {
+      const response = await fetch(`/api/superadmin/businesses/${suspendDialog.businessId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: suspendDialog.action === 'suspend' ? 'suspended' : 'active'
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || `Failed to ${suspendDialog.action} business`)
+      }
+
+      toast({
+        title: "Success",
+        description: `Business ${suspendDialog.action === 'suspend' ? 'suspended' : 'activated'} successfully`,
+      })
+
+      // Refresh users list
+      fetchUsers()
+      fetchUserStats()
+      setSuspendDialog({ open: false, businessId: null, businessName: '', action: 'suspend' })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || `Failed to ${suspendDialog.action} business`,
+        variant: "destructive"
+      })
+    }
   }
 
   if (loading) {
@@ -383,12 +438,13 @@ export default function UsersManagementPage() {
                   <TableHead>Status</TableHead>
                   <TableHead>Last Login</TableHead>
                   <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       No users found
                     </TableCell>
                   </TableRow>
@@ -422,6 +478,11 @@ export default function UsersManagementPage() {
                                 Pending Approval
                               </Badge>
                             )}
+                            {user.business.status === 'suspended' && (
+                              <Badge variant="destructive" className="mt-1 text-xs">
+                                Suspended
+                              </Badge>
+                            )}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">No Business</span>
@@ -435,6 +496,41 @@ export default function UsersManagementPage() {
                           : <span className="text-muted-foreground">Never</span>}
                       </TableCell>
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right">
+                        {user.business && user.business.id && (
+                          <div className="flex justify-end gap-2">
+                            {user.business.status === 'suspended' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSuspendDialog({
+                                  open: true,
+                                  businessId: user.business!.id,
+                                  businessName: user.business!.name,
+                                  action: 'activate'
+                                })}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Activate
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setSuspendDialog({
+                                  open: true,
+                                  businessId: user.business!.id,
+                                  businessName: user.business!.name,
+                                  action: 'suspend'
+                                })}
+                              >
+                                <Ban className="h-4 w-4 mr-1" />
+                                Suspend
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -443,6 +539,39 @@ export default function UsersManagementPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Suspend/Activate Business Dialog */}
+      <AlertDialog open={suspendDialog.open} onOpenChange={(open) => setSuspendDialog({ ...suspendDialog, open })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {suspendDialog.action === 'suspend' ? 'Suspend Business?' : 'Activate Business?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {suspendDialog.action === 'suspend' ? (
+                <>
+                  Are you sure you want to suspend "{suspendDialog.businessName}"?
+                  This will prevent all users of this business from accessing the system.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to activate "{suspendDialog.businessName}"?
+                  This will restore access for all users of this business.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSuspendBusiness}
+              className={suspendDialog.action === 'suspend' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              {suspendDialog.action === 'suspend' ? 'Suspend Business' : 'Activate Business'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
