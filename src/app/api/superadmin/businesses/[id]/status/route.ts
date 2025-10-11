@@ -26,7 +26,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { status } = body
+    const { status, suspensionReason } = body
 
     if (!status || !['active', 'suspended', 'cancelled'].includes(status)) {
       return NextResponse.json(
@@ -35,10 +35,21 @@ export async function PATCH(
       )
     }
 
+    // Validate suspension reason is provided when suspending
+    if (status === 'suspended' && !suspensionReason) {
+      return NextResponse.json(
+        { error: 'Suspension reason is required when suspending a business' },
+        { status: 400 }
+      )
+    }
+
     // Update business status
     const business = await prisma.business.update({
       where: { id: params.id },
-      data: { status }
+      data: {
+        status,
+        suspensionReason: status === 'suspended' ? suspensionReason : null
+      }
     })
 
     return NextResponse.json({

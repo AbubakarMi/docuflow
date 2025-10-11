@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import { User, Building2, Mail, Search, Shield, Clock, TrendingUp, Activity, Users, Ban, CheckCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -75,6 +77,7 @@ export default function UsersManagementPage() {
     businessName: '',
     action: 'suspend'
   })
+  const [suspensionReason, setSuspensionReason] = useState("")
   const { toast } = useToast()
 
   useEffect(() => {
@@ -149,12 +152,23 @@ export default function UsersManagementPage() {
   const handleSuspendBusiness = async () => {
     if (!suspendDialog.businessId) return
 
+    // Validate suspension reason is provided when suspending
+    if (suspendDialog.action === 'suspend' && !suspensionReason.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a reason for suspension",
+        variant: "destructive"
+      })
+      return
+    }
+
     try {
       const response = await fetch(`/api/superadmin/businesses/${suspendDialog.businessId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: suspendDialog.action === 'suspend' ? 'suspended' : 'active'
+          status: suspendDialog.action === 'suspend' ? 'suspended' : 'active',
+          suspensionReason: suspendDialog.action === 'suspend' ? suspensionReason : null
         })
       })
 
@@ -173,6 +187,7 @@ export default function UsersManagementPage() {
       fetchUsers()
       fetchUserStats()
       setSuspendDialog({ open: false, businessId: null, businessName: '', action: 'suspend' })
+      setSuspensionReason("")
     } catch (error: any) {
       toast({
         title: "Error",
@@ -541,7 +556,10 @@ export default function UsersManagementPage() {
       </Card>
 
       {/* Suspend/Activate Business Dialog */}
-      <AlertDialog open={suspendDialog.open} onOpenChange={(open) => setSuspendDialog({ ...suspendDialog, open })}>
+      <AlertDialog open={suspendDialog.open} onOpenChange={(open) => {
+        setSuspendDialog({ ...suspendDialog, open })
+        if (!open) setSuspensionReason("")
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -561,8 +579,26 @@ export default function UsersManagementPage() {
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          {suspendDialog.action === 'suspend' && (
+            <div className="space-y-2 py-4">
+              <Label htmlFor="suspensionReason">Reason for Suspension *</Label>
+              <Textarea
+                id="suspensionReason"
+                placeholder="Enter the reason for suspending this business..."
+                value={suspensionReason}
+                onChange={(e) => setSuspensionReason(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                This reason will be saved and can be viewed by SuperAdmins
+              </p>
+            </div>
+          )}
+
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setSuspensionReason("")}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleSuspendBusiness}
               className={suspendDialog.action === 'suspend' ? 'bg-destructive hover:bg-destructive/90' : ''}

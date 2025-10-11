@@ -18,15 +18,14 @@ import { UserNav } from "@/components/user-nav";
 import { LayoutDashboard, FileText, Box, Settings, Users, ScanLine } from "lucide-react";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { LogoutButton } from "@/components/logout-button";
 import { useSession } from "@/hooks/use-session";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/generate", label: "Generate", icon: FileText },
-  { href: "/templates", label: "Templates", icon: FileText },
+  { href: "/generate", label: "Generate Invoice", icon: FileText },
   { href: "/inventory", label: "Inventory", icon: Box },
   { href: "/scan-and-sell", label: "Scan & Sell", icon: ScanLine },
-  { href: "/users", label: "Users", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -85,6 +84,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     currentUserBusinessName={session.businessName}
                     isSuperAdmin={false}
                   />
+                  <LogoutButton />
                 </>
               )}
             </div>

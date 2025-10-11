@@ -12,7 +12,11 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(tail:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(if [ ! -d \"public/templates\" ])",
+      "Bash(then mkdir -p \"public/templates\")",
+      "Bash(then grep -i \"resend\" .env)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

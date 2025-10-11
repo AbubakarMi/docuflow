@@ -19,6 +19,7 @@ import { Shield, Building2, Users, AlertCircle, FileText, BarChart } from "lucid
 import { Badge } from "@/components/ui/badge";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { LogoutButton } from "@/components/logout-button";
 import { useSession } from "@/hooks/use-session";
 
 const superAdminMenuItems = [
@@ -81,6 +82,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                   currentUserId={session.userId}
                   isSuperAdmin={session.isSuperAdmin}
                 />
+                <LogoutButton />
               </>
             )}
           </div>

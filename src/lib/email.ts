@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 
-const resend = new Resend('re_X22GgK6r_LV8dW6yS54e8Pz6bS6Ah3RDv')
+// Use environment variable or fallback to test API key
+const resend = new Resend(process.env.RESEND_API_KEY || 're_X22GgK6r_LV8dW6yS54e8Pz6bS6Ah3RDv')
 
 export async function sendRegistrationPendingEmail(to: string, businessName: string, adminName: string) {
   try {
