@@ -12,12 +12,6 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better performance
   reactStrictMode: true,
 
-  // Optimize production build
-  swcMinify: true,
-
-  // Optimize font loading
-  optimizeFonts: true,
-
   // Compress output
   compress: true,
 
