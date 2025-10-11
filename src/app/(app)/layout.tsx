@@ -33,6 +33,11 @@ const menuItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { session } = useSession()
 
+  // Skip this layout for SuperAdmin - they have their own layout
+  if (session?.isSuperAdmin) {
+    return <>{children}</>
+  }
+
   return (
       <SidebarProvider>
         <Sidebar>
@@ -82,7 +87,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   />
                 </>
               )}
-              <UserNav />
             </div>
           </header>
           <main className="flex-1 p-4 lg:p-6">{children}</main>

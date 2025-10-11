@@ -10,7 +10,9 @@
       "Bash(npm run:*)",
       "Bash(psql:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(tail:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

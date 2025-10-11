@@ -83,7 +83,6 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 />
               </>
             )}
-            <UserNav />
           </div>
         </header>
         <main className="flex-1 p-4 lg:p-6">{children}</main>

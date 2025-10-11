@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Upload, FileText, Trash2, Eye, EyeOff, Download, Clock } from "lucide-react"
+import { Upload, FileText, Trash2, Eye, EyeOff, Download, Clock, Palette } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
 import {
   Dialog,
   DialogContent,
@@ -234,14 +235,21 @@ export default function TemplatesManagementPage() {
           <h1 className="text-3xl font-bold tracking-tight">Template Management</h1>
           <p className="text-muted-foreground">Upload and manage invoice templates for all businesses</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-indigo-600 hover:bg-indigo-700">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Template
+        <div className="flex gap-2">
+          <Link href="/superadmin/templates/designer">
+            <Button variant="outline">
+              <Palette className="h-4 w-4 mr-2" />
+              Design Template
             </Button>
-          </DialogTrigger>
-          <DialogContent>
+          </Link>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Template
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Upload New Template</DialogTitle>
               <DialogDescription>
@@ -302,6 +310,7 @@ export default function TemplatesManagementPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Info Card */}
