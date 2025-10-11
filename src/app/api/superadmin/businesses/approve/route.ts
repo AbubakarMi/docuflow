@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/db'
 import { sendApprovalEmail } from '@/lib/email'
+import { notifyBusiness } from '@/lib/notifications'
 
 // POST - Approve or reject a business
 export async function POST(request: NextRequest) {
@@ -102,6 +103,18 @@ export async function POST(request: NextRequest) {
       } catch (emailError) {
         console.error('Failed to send approval email:', emailError)
         // Don't fail the approval if email fails
+      }
+
+      // Send notification to business
+      try {
+        await notifyBusiness(businessId, {
+          title: 'Business Approved!',
+          message: `Your business "${business.name}" has been approved by SuperAdmin. You can now access all features.`,
+          type: 'success',
+          actionUrl: '/dashboard'
+        })
+      } catch (notifError) {
+        console.error('Failed to send notification:', notifError)
       }
 
       return NextResponse.json({
