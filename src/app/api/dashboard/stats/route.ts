@@ -45,9 +45,12 @@ export async function GET(request: NextRequest) {
           select: {
             quantity: true,
             unitPrice: true,
+            description: true,
             product: {
               select: {
-                costPrice: true
+                id: true,
+                name: true,
+                cost: true
               }
             }
           }
@@ -55,23 +58,36 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Calculate revenue and cost
+    // Calculate revenue, cost, and track best-selling items
     let totalRevenue = 0
     let totalCost = 0
     let revenueThisMonth = 0
     let revenueLastMonth = 0
 
     const monthlyData: Record<string, { revenue: number; cost: number }> = {}
+    const itemSales: Record<string, { name: string; quantity: number; revenue: number }> = {}
 
     for (const invoice of invoices) {
       const invoiceRevenue = Number(invoice.totalAmount)
       totalRevenue += invoiceRevenue
 
-      // Calculate cost from invoice items
+      // Calculate cost from invoice items and track sales
       let invoiceCost = 0
       for (const item of invoice.items) {
-        const costPrice = item.product?.costPrice || 0
-        invoiceCost += Number(costPrice) * item.quantity
+        const cost = item.product?.cost || 0
+        invoiceCost += Number(cost) * item.quantity
+
+        // Track item sales for best-selling items
+        const itemName = item.product?.name || item.description
+        const itemRevenue = Number(item.unitPrice) * item.quantity
+
+        if (itemName) {
+          if (!itemSales[itemName]) {
+            itemSales[itemName] = { name: itemName, quantity: 0, revenue: 0 }
+          }
+          itemSales[itemName].quantity += item.quantity
+          itemSales[itemName].revenue += itemRevenue
+        }
       }
       totalCost += invoiceCost
 
