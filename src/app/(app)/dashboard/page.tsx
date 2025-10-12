@@ -198,21 +198,22 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-[1800px] mx-auto">
+    <div className="flex flex-col gap-4 sm:gap-6 md:gap-8 max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
       {/* Export Button */}
       <div className="flex justify-end gap-3">
         <Button
           onClick={handleExportClick}
           disabled={exporting || !stats}
           variant="outline"
-          className="gap-2"
+          className="gap-2 text-sm sm:text-base"
         >
           {exporting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Download className="h-4 w-4" />
           )}
-          Export Dashboard
+          <span className="hidden sm:inline">Export Dashboard</span>
+          <span className="sm:hidden">Export</span>
         </Button>
       </div>
 
@@ -227,7 +228,7 @@ export default function DashboardPage() {
       />
 
       {/* Stats Cards */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-lg transition-all border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold">Total Revenue</CardTitle>
@@ -236,10 +237,10 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold break-all">
               {formatCurrency(stats?.totalRevenue || 0, 'NGN')}
             </div>
-            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1 flex items-center gap-1 flex-wrap">
               {stats && stats.revenueGrowth >= 0 ? (
                 <>
                   <TrendingUp className="h-3 w-3 text-green-600" />
@@ -264,10 +265,10 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold break-all">
               {formatCurrency(stats?.totalCost || 0, 'NGN')}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Cost of goods sold
             </p>
           </CardContent>
@@ -281,10 +282,10 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-600">
+            <div className="text-2xl sm:text-3xl font-bold text-emerald-600 break-all">
               {formatCurrency(stats?.totalProfit || 0, 'NGN')}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               {profitMargin}% profit margin
             </p>
           </CardContent>
@@ -298,8 +299,8 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats?.invoiceCount || 0}</div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-2xl sm:text-3xl font-bold">{stats?.invoiceCount || 0}</div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Documents generated
             </p>
           </CardContent>
@@ -309,14 +310,14 @@ export default function DashboardPage() {
       {/* Profit Chart */}
       <Card className="hover:shadow-lg transition-all">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl">Financial Overview</CardTitle>
-              <CardDescription className="text-base mt-1">
+              <CardTitle className="text-xl sm:text-2xl">Financial Overview</CardTitle>
+              <CardDescription className="text-sm sm:text-base mt-1">
                 Revenue, Cost, and Profit analytics for the last 12 months
               </CardDescription>
             </div>
-            <div className="flex gap-6 text-sm">
+            <div className="flex gap-3 sm:gap-6 text-xs sm:text-sm flex-wrap">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                 <span className="text-muted-foreground">Revenue</span>
@@ -332,7 +333,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-2" ref={chartRef}>
+        <CardContent className="pt-2 overflow-x-auto" ref={chartRef}>
           {stats && <ProfitChart data={stats.monthlyData} />}
         </CardContent>
       </Card>

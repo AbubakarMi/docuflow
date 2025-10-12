@@ -31,26 +31,26 @@ export function ExportConfirmationDialog({
 }: ExportConfirmationDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-[95vw] sm:max-w-md md:max-w-lg">
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogTitle className="text-lg sm:text-xl">{title}</AlertDialogTitle>
+          <AlertDialogDescription className="text-sm sm:text-base">{description}</AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="grid grid-cols-2 gap-4 my-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 my-4">
           <button
             onClick={() => {
               onConfirm('pdf')
               onOpenChange(false)
             }}
             disabled={isLoading}
-            className="flex flex-col items-center justify-center p-6 border-2 border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+            className="flex flex-col items-center justify-center p-4 sm:p-6 border-2 border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
           >
-            <FileDown className="h-12 w-12 text-slate-600 group-hover:text-blue-600 mb-3" />
-            <span className="font-semibold text-slate-700 group-hover:text-blue-700">
+            <FileDown className="h-10 w-10 sm:h-12 sm:w-12 text-slate-600 group-hover:text-blue-600 mb-2 sm:mb-3" />
+            <span className="font-semibold text-sm sm:text-base text-slate-700 group-hover:text-blue-700">
               PDF Format
             </span>
-            <span className="text-xs text-slate-500 mt-1">
+            <span className="text-xs text-slate-500 mt-1 text-center">
               Best for viewing & printing
             </span>
           </button>
@@ -61,13 +61,13 @@ export function ExportConfirmationDialog({
               onOpenChange(false)
             }}
             disabled={isLoading}
-            className="flex flex-col items-center justify-center p-6 border-2 border-slate-200 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+            className="flex flex-col items-center justify-center p-4 sm:p-6 border-2 border-slate-200 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
           >
-            <Download className="h-12 w-12 text-slate-600 group-hover:text-emerald-600 mb-3" />
-            <span className="font-semibold text-slate-700 group-hover:text-emerald-700">
+            <Download className="h-10 w-10 sm:h-12 sm:w-12 text-slate-600 group-hover:text-emerald-600 mb-2 sm:mb-3" />
+            <span className="font-semibold text-sm sm:text-base text-slate-700 group-hover:text-emerald-700">
               DOCX Format
             </span>
-            <span className="text-xs text-slate-500 mt-1">
+            <span className="text-xs text-slate-500 mt-1 text-center">
               Editable Word document
             </span>
           </button>

@@ -378,14 +378,14 @@ function GeneratePageContent() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-4 sm:gap-6 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Generate Invoice</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Generate Invoice</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">
           Fill in the details below to create your invoice, or use AI to generate it from a prompt.
         </p>
         {businessDetails && (
-          <p className="text-sm text-emerald-600 mt-2">
+          <p className="text-xs sm:text-sm text-emerald-600 mt-2">
             ✓ Business details loaded: {businessDetails.name}
           </p>
         )}
@@ -428,11 +428,11 @@ function GeneratePageContent() {
                 <Input id="from-address" {...form.register("fromAddress")} disabled className="bg-slate-50" />
               </div>
               {businessDetails && (
-                <div className="text-sm text-slate-600 space-y-1 p-3 bg-slate-50 rounded-md border">
-                  {businessDetails.email && <p>Email: {businessDetails.email}</p>}
+                <div className="text-xs sm:text-sm text-slate-600 space-y-1 p-3 bg-slate-50 rounded-md border">
+                  {businessDetails.email && <p className="break-all">Email: {businessDetails.email}</p>}
                   {businessDetails.phone && <p>Phone: {businessDetails.phone}</p>}
                   {businessDetails.taxId && <p>Tax ID: {businessDetails.taxId}</p>}
-                  {businessDetails.website && <p>Website: {businessDetails.website}</p>}
+                  {businessDetails.website && <p className="break-all">Website: {businessDetails.website}</p>}
                 </div>
               )}
             </CardContent>
@@ -500,7 +500,7 @@ function GeneratePageContent() {
           <CardHeader>
             <CardTitle>Items</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -557,12 +557,12 @@ function GeneratePageContent() {
           </div>
       </form>
 
-      <div className="flex justify-end gap-2 mt-6">
-        <Button variant="outline" onClick={handlePreview} disabled={isDownloading}>
+      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-6">
+        <Button variant="outline" onClick={handlePreview} disabled={isDownloading} className="w-full sm:w-auto">
           <Eye className="mr-2 h-4 w-4" />
           Preview
         </Button>
-        <Button onClick={handleExportClick} disabled={isDownloading}>
+        <Button onClick={handleExportClick} disabled={isDownloading} className="w-full sm:w-auto">
           {isDownloading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

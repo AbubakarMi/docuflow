@@ -53,35 +53,35 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw]">
         <DialogHeader>
-          <DialogTitle>Invoice Preview</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Invoice Preview</DialogTitle>
         </DialogHeader>
 
-        <div className="bg-white p-8 rounded-lg border">
+        <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg border">
           {/* Header */}
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0 mb-6 sm:mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-indigo-600 mb-2">{data.businessName}</h1>
-              <div className="text-sm text-slate-600 space-y-1">
-                {data.businessEmail && <p>{data.businessEmail}</p>}
+              <h1 className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-2 break-words">{data.businessName}</h1>
+              <div className="text-xs sm:text-sm text-slate-600 space-y-1">
+                {data.businessEmail && <p className="break-all">{data.businessEmail}</p>}
                 {data.businessPhone && <p>{data.businessPhone}</p>}
                 {data.businessAddress && <p>{data.businessAddress}</p>}
                 {businessLocation && <p>{businessLocation}</p>}
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-semibold text-slate-600 mb-4">INVOICE</p>
-              <div className="text-sm space-y-1">
-                <div className="flex gap-2">
+            <div className="sm:text-right">
+              <p className="text-xl sm:text-2xl font-semibold text-slate-600 mb-3 sm:mb-4">INVOICE</p>
+              <div className="text-xs sm:text-sm space-y-1">
+                <div className="flex gap-2 flex-wrap">
                   <span className="font-semibold">Invoice Number:</span>
-                  <span>{data.invoiceNumber}</span>
+                  <span className="break-all">{data.invoiceNumber}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <span className="font-semibold">Invoice Date:</span>
                   <span>{data.invoiceDate}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <span className="font-semibold">Due Date:</span>
                   <span>{data.dueDate}</span>
                 </div>
@@ -112,28 +112,28 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
           </div>
 
           {/* Items Table */}
-          <div className="mb-8">
-            <table className="w-full">
+          <div className="mb-6 sm:mb-8 overflow-x-auto">
+            <table className="w-full min-w-[500px]">
               <thead>
                 <tr className="bg-indigo-600 text-white">
-                  <th className="text-left py-3 px-4 font-semibold">Item Description</th>
-                  <th className="text-center py-3 px-4 font-semibold w-20">Qty</th>
-                  <th className="text-right py-3 px-4 font-semibold w-32">Price</th>
-                  <th className="text-right py-3 px-4 font-semibold w-32">Amount</th>
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-semibold text-xs sm:text-sm">Item Description</th>
+                  <th className="text-center py-2 sm:py-3 px-2 sm:px-4 font-semibold text-xs sm:text-sm w-16 sm:w-20">Qty</th>
+                  <th className="text-right py-2 sm:py-3 px-2 sm:px-4 font-semibold text-xs sm:text-sm w-24 sm:w-32">Price</th>
+                  <th className="text-right py-2 sm:py-3 px-2 sm:px-4 font-semibold text-xs sm:text-sm w-24 sm:w-32">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((item, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-slate-50' : 'bg-white'}>
-                    <td className="py-3 px-4">
-                      <p className="font-medium">{item.productName}</p>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4">
+                      <p className="font-medium text-xs sm:text-sm">{item.productName}</p>
                       {item.description && (
-                        <p className="text-sm text-slate-600">{item.description}</p>
+                        <p className="text-xs text-slate-600">{item.description}</p>
                       )}
                     </td>
-                    <td className="text-center py-3 px-4">{item.quantity}</td>
-                    <td className="text-right py-3 px-4">{formatCurrency(item.price, data.currency)}</td>
-                    <td className="text-right py-3 px-4 font-medium">{formatCurrency(item.amount, data.currency)}</td>
+                    <td className="text-center py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">{item.quantity}</td>
+                    <td className="text-right py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">{formatCurrency(item.price, data.currency)}</td>
+                    <td className="text-right py-2 sm:py-3 px-2 sm:px-4 font-medium text-xs sm:text-sm">{formatCurrency(item.amount, data.currency)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -141,27 +141,27 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
           </div>
 
           {/* Totals */}
-          <div className="flex justify-end mb-8">
-            <div className="w-80 space-y-2">
-              <div className="flex justify-between py-2">
+          <div className="flex justify-end mb-6 sm:mb-8">
+            <div className="w-full sm:w-80 space-y-2">
+              <div className="flex justify-between py-2 text-xs sm:text-sm">
                 <span className="text-slate-600">Subtotal:</span>
                 <span className="font-medium">{formatCurrency(data.subtotal, data.currency)}</span>
               </div>
               {data.taxRate && data.taxAmount && (
-                <div className="flex justify-between py-2">
+                <div className="flex justify-between py-2 text-xs sm:text-sm">
                   <span className="text-slate-600">Tax ({data.taxRate}%):</span>
                   <span className="font-medium">{formatCurrency(data.taxAmount, data.currency)}</span>
                 </div>
               )}
               {data.discount && data.discount > 0 && (
-                <div className="flex justify-between py-2">
+                <div className="flex justify-between py-2 text-xs sm:text-sm">
                   <span className="text-slate-600">Discount:</span>
                   <span className="font-medium text-red-600">-{formatCurrency(data.discount, data.currency)}</span>
                 </div>
               )}
               <div className="flex justify-between py-3 border-t-2 border-indigo-600">
-                <span className="text-lg font-bold text-indigo-600">TOTAL:</span>
-                <span className="text-lg font-bold text-indigo-600">{formatCurrency(data.total, data.currency)}</span>
+                <span className="text-base sm:text-lg font-bold text-indigo-600">TOTAL:</span>
+                <span className="text-base sm:text-lg font-bold text-indigo-600">{formatCurrency(data.total, data.currency)}</span>
               </div>
             </div>
           </div>
