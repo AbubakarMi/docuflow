@@ -28,6 +28,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { generateInvoiceFromText } from "@/ai/flows/generate-invoice-from-text";
 import { useSearchParams } from "next/navigation";
+import { InvoicePreview } from "@/components/invoice-preview";
+import { Eye, FileDown, Download, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   fromName: z.string().optional(),
@@ -46,25 +48,102 @@ const formSchema = z.object({
 
 type InvoiceFormValues = z.infer<typeof formSchema>;
 
+interface BusinessDetails {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country: string
+  taxId?: string
+  logo?: string
+  website?: string
+  currency: string
+  timezone: string
+  settings?: {
+    invoicePrefix: string
+    nextInvoiceNumber: number
+    invoiceTerms?: string
+    invoiceNotes?: string
+    paymentTermsDays: number
+    emailFromName?: string
+    emailFromAddress?: string
+  }
+}
+
 function GeneratePageContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [businessDetails, setBusinessDetails] = useState<BusinessDetails | null>(null);
+  const [loadingBusiness, setLoadingBusiness] = useState(true);
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fromName: "Your Company LLC",
-      fromAddress: "123 Main St, Anytown, USA",
+      fromName: "",
+      fromAddress: "",
       toName: "",
       toAddress: "",
-      invoiceNumber: `INV-${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`,
+      invoiceNumber: "",
       issueDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0],
-      items: [{ description: "Website Design", quantity: 1, price: 10000 }],
+      items: [{ description: "", quantity: 1, price: 0 }],
     },
   });
+
+  // Fetch business details on mount
+  useEffect(() => {
+    const fetchBusinessDetails = async () => {
+      try {
+        const response = await fetch('/api/business/details')
+        const data = await response.json()
+
+        if (data.success && data.business) {
+          setBusinessDetails(data.business)
+
+          // Update form with business details
+          form.setValue('fromName', data.business.name)
+          const businessAddress = [
+            data.business.address,
+            data.business.city,
+            data.business.state,
+            data.business.zipCode,
+            data.business.country
+          ].filter(Boolean).join(', ')
+          form.setValue('fromAddress', businessAddress)
+
+          // Set invoice number with prefix
+          if (data.business.settings) {
+            const invoiceNumber = `${data.business.settings.invoicePrefix}-${String(data.business.settings.nextInvoiceNumber).padStart(4, '0')}`
+            form.setValue('invoiceNumber', invoiceNumber)
+
+            // Set due date based on payment terms
+            const dueDate = new Date()
+            dueDate.setDate(dueDate.getDate() + data.business.settings.paymentTermsDays)
+            form.setValue('dueDate', dueDate.toISOString().split('T')[0])
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch business details:', error)
+        toast({
+          title: 'Warning',
+          description: 'Could not load business details. Using default values.',
+          variant: 'destructive'
+        })
+      } finally {
+        setLoadingBusiness(false)
+      }
+    }
+
+    fetchBusinessDetails()
+  }, [form, toast]);
 
   const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
@@ -128,11 +207,160 @@ function GeneratePageContent() {
   const tax = subtotal * 0.10;
   const total = subtotal + tax;
 
-  const handleAction = (action: 'Preview' | 'DOCX' | 'PDF') => {
-    toast({
-      title: `${action} Generation`,
-      description: `Generating ${action.toLowerCase()}... (simulation)`,
-    });
+  // Prepare invoice data for preview/download
+  const prepareInvoiceData = () => {
+    const values = form.getValues()
+
+    // Format business address parts
+    const businessAddressFull = values.fromAddress || businessDetails?.address || ''
+
+    return {
+      invoiceNumber: values.invoiceNumber || 'DRAFT',
+      invoiceDate: values.issueDate || new Date().toISOString().split('T')[0],
+      dueDate: values.dueDate || new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0],
+      status: 'draft',
+
+      // Business information from database
+      businessName: businessDetails?.name || values.fromName || 'Your Company',
+      businessEmail: businessDetails?.email || 'info@company.com',
+      businessPhone: businessDetails?.phone || '',
+      businessAddress: businessDetails?.address || businessAddressFull.split(',')[0] || '',
+      businessCity: businessDetails?.city || '',
+      businessState: businessDetails?.state || '',
+      businessCountry: businessDetails?.country || 'Nigeria',
+
+      // Customer information
+      customerName: values.toName || 'Customer Name',
+      customerEmail: 'customer@email.com',
+      customerPhone: '',
+      customerAddress: values.toAddress ? values.toAddress.split(',')[0] : '',
+      customerCity: values.toAddress ? (values.toAddress.split(',')[1]?.trim() || '') : '',
+      customerState: '',
+      customerCountry: '',
+
+      // Items
+      items: values.items.map(item => ({
+        productName: item.description || 'Item',
+        description: '',
+        quantity: item.quantity,
+        price: item.price,
+        amount: item.quantity * item.price
+      })),
+
+      // Totals
+      subtotal,
+      taxRate: 10,
+      taxAmount: tax,
+      discount: 0,
+      total,
+      currency: businessDetails?.currency || 'NGN',
+
+      // Notes and terms from business settings or defaults
+      notes: businessDetails?.settings?.invoiceNotes || 'Thank you for your business!',
+      terms: businessDetails?.settings?.invoiceTerms || `Payment is due within ${businessDetails?.settings?.paymentTermsDays || 30} days.`
+    }
+  }
+
+  const handlePreview = () => {
+    setPreviewOpen(true)
+  }
+
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true)
+    try {
+      const invoiceData = prepareInvoiceData()
+
+      const response = await fetch('/api/invoices/generate/pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ invoiceData })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Invoice-${invoiceData.invoiceNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: 'Success',
+        description: 'PDF invoice downloaded successfully'
+      })
+    } catch (error) {
+      console.error('Download error:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to download PDF invoice',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleDownloadDOCX = async () => {
+    setIsDownloading(true)
+    try {
+      const invoiceData = prepareInvoiceData()
+
+      const response = await fetch('/api/invoices/generate/docx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ invoiceData })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate DOCX')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Invoice-${invoiceData.invoiceNumber}.docx`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: 'Success',
+        description: 'DOCX invoice downloaded successfully'
+      })
+    } catch (error) {
+      console.error('Download error:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to download DOCX invoice',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  // Show loading state while fetching business details
+  if (loadingBusiness) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-4 text-muted-foreground">Loading business details...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -142,6 +370,11 @@ function GeneratePageContent() {
         <p className="text-muted-foreground">
           Fill in the details below to create your invoice, or use AI to generate it from a prompt.
         </p>
+        {businessDetails && (
+          <p className="text-sm text-emerald-600 mt-2">
+            ✓ Business details loaded: {businessDetails.name}
+          </p>
+        )}
       </div>
 
       <Card>
@@ -169,16 +402,25 @@ function GeneratePageContent() {
           <Card>
             <CardHeader>
               <CardTitle>From</CardTitle>
+              <CardDescription>Your business information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="from-name">Company Name</Label>
-                <Input id="from-name" {...form.register("fromName")} />
+                <Input id="from-name" {...form.register("fromName")} disabled className="bg-slate-50" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="from-address">Address</Label>
-                <Input id="from-address" {...form.register("fromAddress")} />
+                <Input id="from-address" {...form.register("fromAddress")} disabled className="bg-slate-50" />
               </div>
+              {businessDetails && (
+                <div className="text-sm text-slate-600 space-y-1 p-3 bg-slate-50 rounded-md border">
+                  {businessDetails.email && <p>Email: {businessDetails.email}</p>}
+                  {businessDetails.phone && <p>Phone: {businessDetails.phone}</p>}
+                  {businessDetails.taxId && <p>Tax ID: {businessDetails.taxId}</p>}
+                  {businessDetails.website && <p>Website: {businessDetails.website}</p>}
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -201,11 +443,28 @@ function GeneratePageContent() {
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Invoice Details</CardTitle>
+            <CardDescription>
+              {businessDetails?.settings && (
+                <span className="text-emerald-600">
+                  Auto-generated from your business settings
+                </span>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="invoice-number">Invoice Number</Label>
-                <Input id="invoice-number" {...form.register("invoiceNumber")} />
+                <Input
+                  id="invoice-number"
+                  {...form.register("invoiceNumber")}
+                  className="font-mono font-semibold"
+                  disabled
+                />
+                {businessDetails?.settings && (
+                  <p className="text-xs text-slate-500">
+                    Next: {businessDetails.settings.invoicePrefix}-{String(businessDetails.settings.nextInvoiceNumber + 1).padStart(4, '0')}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="issue-date">Date of Issue</Label>
@@ -214,6 +473,11 @@ function GeneratePageContent() {
               <div className="space-y-2">
                 <Label htmlFor="due-date">Due Date</Label>
                 <Input id="due-date" type="date" {...form.register("dueDate")} />
+                {businessDetails?.settings && (
+                  <p className="text-xs text-slate-500">
+                    Payment terms: {businessDetails.settings.paymentTermsDays} days
+                  </p>
+                )}
               </div>
           </CardContent>
         </Card>
@@ -280,10 +544,34 @@ function GeneratePageContent() {
       </form>
 
       <div className="flex justify-end gap-2 mt-6">
-        <Button variant="outline" onClick={() => handleAction('Preview')}>Preview</Button>
-        <Button onClick={() => handleAction('DOCX')}>Generate DOCX</Button>
-        <Button onClick={() => handleAction('PDF')}>Generate PDF</Button>
+        <Button variant="outline" onClick={handlePreview} disabled={isDownloading}>
+          <Eye className="mr-2 h-4 w-4" />
+          Preview
+        </Button>
+        <Button onClick={handleDownloadDOCX} disabled={isDownloading}>
+          {isDownloading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
+          Download DOCX
+        </Button>
+        <Button onClick={handleDownloadPDF} disabled={isDownloading}>
+          {isDownloading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <FileDown className="mr-2 h-4 w-4" />
+          )}
+          Download PDF
+        </Button>
       </div>
+
+      {/* Preview Modal */}
+      <InvoicePreview
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        data={prepareInvoiceData()}
+      />
     </div>
   );
 }
