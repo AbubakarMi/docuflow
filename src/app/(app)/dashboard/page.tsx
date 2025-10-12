@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import {
   Card,
   CardContent,
@@ -8,9 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { FileText, TrendingUp, TrendingDown, DollarSign, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { FileText, TrendingUp, TrendingDown, DollarSign, Loader2, Download, FileDown } from "lucide-react"
 import { ProfitChart } from "@/components/dashboard/profit-chart"
 import { formatCurrency } from "@/lib/utils"
+import html2canvas from "html2canvas"
+import { useToast } from "@/hooks/use-toast"
 
 const NairaIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground">
@@ -35,6 +38,9 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
+  const chartRef = useRef<HTMLDivElement>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchStats()
@@ -70,8 +76,145 @@ export default function DashboardPage() {
     ? ((stats.totalProfit / stats.totalRevenue) * 100).toFixed(1)
     : 0
 
+  const handleExportPDF = async () => {
+    if (!stats) return
+
+    setExporting(true)
+    try {
+      // Capture chart as image
+      let chartImage = null
+      if (chartRef.current) {
+        const canvas = await html2canvas(chartRef.current, {
+          backgroundColor: '#ffffff',
+          scale: 2
+        })
+        chartImage = canvas.toDataURL('image/png')
+      }
+
+      // Send request to API
+      const response = await fetch('/api/dashboard/export/pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          stats,
+          businessName: 'Your Business',
+          chartImage
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF')
+      }
+
+      // Download the PDF
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: 'Success',
+        description: 'PDF report downloaded successfully'
+      })
+    } catch (error) {
+      console.error('Export error:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to export PDF report',
+        variant: 'destructive'
+      })
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleExportDOCX = async () => {
+    if (!stats) return
+
+    setExporting(true)
+    try {
+      // Send request to API
+      const response = await fetch('/api/dashboard/export/docx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          stats,
+          businessName: 'Your Business'
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate DOCX')
+      }
+
+      // Download the DOCX
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.docx`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: 'Success',
+        description: 'DOCX report downloaded successfully'
+      })
+    } catch (error) {
+      console.error('Export error:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to export DOCX report',
+        variant: 'destructive'
+      })
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-8 max-w-[1800px] mx-auto">
+      {/* Export Buttons */}
+      <div className="flex justify-end gap-3">
+        <Button
+          onClick={handleExportPDF}
+          disabled={exporting || !stats}
+          variant="outline"
+          className="gap-2"
+        >
+          {exporting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <FileDown className="h-4 w-4" />
+          )}
+          Export PDF
+        </Button>
+        <Button
+          onClick={handleExportDOCX}
+          disabled={exporting || !stats}
+          variant="outline"
+          className="gap-2"
+        >
+          {exporting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          Export DOCX
+        </Button>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-lg transition-all border-l-4 border-l-blue-500">
@@ -178,7 +321,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-2">
+        <CardContent className="pt-2" ref={chartRef}>
           {stats && <ProfitChart data={stats.monthlyData} />}
         </CardContent>
       </Card>

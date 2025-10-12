@@ -16,7 +16,8 @@
       "Bash(if [ ! -d \"public/templates\" ])",
       "Bash(then mkdir -p \"public/templates\")",
       "Bash(then grep -i \"resend\" .env)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []
