@@ -9,11 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, TrendingUp, TrendingDown, DollarSign, Loader2, Download, FileDown } from "lucide-react"
+import { FileText, TrendingUp, TrendingDown, DollarSign, Loader2, Download } from "lucide-react"
 import { ProfitChart } from "@/components/dashboard/profit-chart"
 import { formatCurrency } from "@/lib/utils"
 import html2canvas from "html2canvas"
 import { useToast } from "@/hooks/use-toast"
+import { ExportConfirmationDialog } from "@/components/export-confirmation-dialog"
 
 const NairaIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground">
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const chartRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
 
@@ -183,25 +185,24 @@ export default function DashboardPage() {
     }
   }
 
+  const handleExportClick = () => {
+    setExportDialogOpen(true)
+  }
+
+  const handleExportConfirm = async (format: 'pdf' | 'docx') => {
+    if (format === 'pdf') {
+      await handleExportPDF()
+    } else {
+      await handleExportDOCX()
+    }
+  }
+
   return (
     <div className="flex flex-col gap-8 max-w-[1800px] mx-auto">
-      {/* Export Buttons */}
+      {/* Export Button */}
       <div className="flex justify-end gap-3">
         <Button
-          onClick={handleExportPDF}
-          disabled={exporting || !stats}
-          variant="outline"
-          className="gap-2"
-        >
-          {exporting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <FileDown className="h-4 w-4" />
-          )}
-          Export PDF
-        </Button>
-        <Button
-          onClick={handleExportDOCX}
+          onClick={handleExportClick}
           disabled={exporting || !stats}
           variant="outline"
           className="gap-2"
@@ -211,9 +212,19 @@ export default function DashboardPage() {
           ) : (
             <Download className="h-4 w-4" />
           )}
-          Export DOCX
+          Export Dashboard
         </Button>
       </div>
+
+      {/* Export Confirmation Dialog */}
+      <ExportConfirmationDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onConfirm={handleExportConfirm}
+        title="Export Dashboard Report"
+        description="Choose the format you want to export your dashboard report:"
+        isLoading={exporting}
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">

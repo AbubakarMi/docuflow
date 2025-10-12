@@ -29,7 +29,8 @@ import { useToast } from "@/hooks/use-toast";
 import { generateInvoiceFromText } from "@/ai/flows/generate-invoice-from-text";
 import { useSearchParams } from "next/navigation";
 import { InvoicePreview } from "@/components/invoice-preview";
-import { Eye, FileDown, Download, Loader2 } from "lucide-react";
+import { ExportConfirmationDialog } from "@/components/export-confirmation-dialog";
+import { Eye, Download, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   fromName: z.string().optional(),
@@ -81,6 +82,7 @@ function GeneratePageContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [businessDetails, setBusinessDetails] = useState<BusinessDetails | null>(null);
   const [loadingBusiness, setLoadingBusiness] = useState(true);
 
@@ -263,6 +265,18 @@ function GeneratePageContent() {
 
   const handlePreview = () => {
     setPreviewOpen(true)
+  }
+
+  const handleExportClick = () => {
+    setExportDialogOpen(true)
+  }
+
+  const handleExportConfirm = async (format: 'pdf' | 'docx') => {
+    if (format === 'pdf') {
+      await handleDownloadPDF()
+    } else {
+      await handleDownloadDOCX()
+    }
   }
 
   const handleDownloadPDF = async () => {
@@ -548,21 +562,13 @@ function GeneratePageContent() {
           <Eye className="mr-2 h-4 w-4" />
           Preview
         </Button>
-        <Button onClick={handleDownloadDOCX} disabled={isDownloading}>
+        <Button onClick={handleExportClick} disabled={isDownloading}>
           {isDownloading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Download className="mr-2 h-4 w-4" />
           )}
-          Download DOCX
-        </Button>
-        <Button onClick={handleDownloadPDF} disabled={isDownloading}>
-          {isDownloading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <FileDown className="mr-2 h-4 w-4" />
-          )}
-          Download PDF
+          Generate Invoice
         </Button>
       </div>
 
@@ -571,6 +577,16 @@ function GeneratePageContent() {
         open={previewOpen}
         onOpenChange={setPreviewOpen}
         data={prepareInvoiceData()}
+      />
+
+      {/* Export Confirmation Dialog */}
+      <ExportConfirmationDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onConfirm={handleExportConfirm}
+        title="Generate Invoice"
+        description="Choose the format for your invoice:"
+        isLoading={isDownloading}
       />
     </div>
   );
