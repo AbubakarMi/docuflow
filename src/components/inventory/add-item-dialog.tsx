@@ -18,10 +18,11 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, ScanLine, Sparkles, Upload } from "lucide-react";
+import { Camera, ScanLine, Sparkles, Upload, Wand2 } from "lucide-react";
 import Image from "next/image";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { suggestItemDetailsFromImage } from "@/ai/flows/suggest-item-details-from-image";
+import { categorizeItem } from "@/ai/flows/categorize-item";
 
 const itemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -58,6 +59,7 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [isCategorizing, setIsCategorizing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -160,6 +162,40 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
         setIsScanning(false);
         setActiveTab("upload");
       }
+    }
+  };
+
+  const handleAICategorize = async () => {
+    const itemName = form.getValues("name");
+
+    if (!itemName || itemName.trim() === "") {
+      toast({
+        variant: "destructive",
+        title: "Item Name Required",
+        description: "Please enter an item name first before using AI categorization."
+      });
+      return;
+    }
+
+    setIsCategorizing(true);
+    try {
+      const result = await categorizeItem({ itemName });
+
+      form.setValue("category", result.category);
+
+      toast({
+        title: "AI Categorization Complete",
+        description: `Suggested category: ${result.category} (${result.confidence} confidence)`,
+      });
+    } catch (error) {
+      console.error("Categorization error:", error);
+      toast({
+        variant: "destructive",
+        title: "AI Categorization Failed",
+        description: "Could not categorize the item. Please enter manually."
+      });
+    } finally {
+      setIsCategorizing(false);
     }
   };
 
@@ -270,7 +306,24 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
                   {form.formState.errors.name && <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category" className="flex items-center justify-between">
+                    <span>Category</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleAICategorize}
+                      disabled={isCategorizing}
+                      className="h-auto p-1 text-xs hover:text-primary"
+                    >
+                      {isCategorizing ? (
+                        <Sparkles className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-3 w-3" />
+                      )}
+                      <span className="ml-1">AI Assist</span>
+                    </Button>
+                  </Label>
                   <Input id="category" {...form.register("category")} placeholder="e.g., Food" />
                   {form.formState.errors.category && <p className="text-destructive text-xs">{form.formState.errors.category.message}</p>}
                 </div>
