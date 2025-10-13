@@ -1,0 +1,437 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MULTI-TENANT CORE MODELS
+// ============================================
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String   @default("USA")
+  taxId       String?  // Tax ID or Business Registration Number
+  logo        String?  // URL to logo
+  website     String?
+
+  // Business settings
+  currency    String   @default("USD")
+  timezone    String   @default("UTC")
+
+  // Subscription & Status
+  plan             String   @default("free") // free, starter, business, enterprise
+  status           String   @default("active") // active, suspended, cancelled
+  suspensionReason String?  @db.Text // Reason for suspension (if status is suspended)
+  approved         Boolean  @default(false) // SuperAdmin approval required
+  approvedAt       DateTime?
+  approvedBy       String?  // SuperAdmin userId who approved
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users         User[]
+  customers     Customer[]
+  products      Product[]
+  invoices      Invoice[]
+  payments      Payment[]
+  settings      BusinessSettings?
+  chatMessages  ChatMessage[]
+  notifications Notification[]
+
+  @@index([email])
+  @@index([status])
+  @@map("businesses")
+}
+
+model BusinessSettings {
+  id                String   @id @default(cuid())
+  businessId        String   @unique
+  business          Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Invoice Settings
+  invoicePrefix     String   @default("INV")
+  nextInvoiceNumber Int      @default(1001)
+  invoiceTerms      String?  @db.Text
+  invoiceNotes      String?  @db.Text
+
+  // Payment Settings
+  paymentTermsDays  Int      @default(30)
+  lateFeePercent    Float    @default(0)
+
+  // Email Settings
+  emailFromName     String?
+  emailFromAddress  String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("business_settings")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  businessId  String?
+  business    Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  username    String?  @unique
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  role        String   @default("admin") // superadmin, admin
+  avatar      String?
+  phone       String?
+
+  status      String   @default("active") // active, inactive, suspended
+
+  // Super Admin flag
+  isSuperAdmin Boolean @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastLoginAt DateTime?
+
+  // Relations
+  invoicesCreated Invoice[] @relation("InvoiceCreator")
+  passwordReset   PasswordReset?
+  chatMessages    ChatMessage[]
+  notifications   Notification[]
+
+  @@index([businessId])
+  @@index([email])
+  @@map("users")
+}
+
+// ============================================
+// CUSTOMER MANAGEMENT
+// ============================================
+
+model Customer {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Customer Info
+  customerCode String  // Unique code per business
+  name        String
+  email       String
+  phone       String?
+  company     String?
+
+  // Address
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String?
+
+  // Financial
+  taxId       String?
+  creditLimit Float?
+
+  status      String   @default("active") // active, inactive
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  invoices    Invoice[]
+
+  @@unique([businessId, customerCode])
+  @@index([businessId])
+  @@index([email])
+  @@map("customers")
+}
+
+// ============================================
+// PRODUCT/SERVICE CATALOG
+// ============================================
+
+model Product {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  sku         String   // Stock Keeping Unit
+  name        String
+  description String?  @db.Text
+  category    String?
+
+  // Pricing
+  price       Float
+  cost        Float?
+  taxRate     Float    @default(0)
+
+  // Inventory
+  trackInventory Boolean @default(false)
+  stockQuantity  Int     @default(0)
+  lowStockAlert  Int?
+
+  // Product Type
+  type        String   @default("product") // product, service
+
+  status      String   @default("active") // active, inactive
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  invoiceItems InvoiceItem[]
+  stockMovements StockMovement[]
+
+  @@unique([businessId, sku])
+  @@index([businessId])
+  @@index([category])
+  @@map("products")
+}
+
+// ============================================
+// INVENTORY STOCK MOVEMENTS
+// ============================================
+
+model StockMovement {
+  id          String   @id @default(cuid())
+  businessId  String
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Movement details
+  type        String   // in, out, adjustment
+  quantity    Int
+  previousQty Int
+  newQty      Int
+
+  // Reference
+  invoiceId   String?
+  reason      String?  @db.Text
+  notes       String?  @db.Text
+
+  createdAt   DateTime @default(now())
+  createdBy   String?  // userId who made the change
+
+  @@index([businessId])
+  @@index([productId])
+  @@index([invoiceId])
+  @@index([createdAt])
+  @@map("stock_movements")
+}
+
+// ============================================
+// INVOICE MANAGEMENT
+// ============================================
+
+model Invoice {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Invoice Details
+  invoiceNumber   String   // Auto-generated: INV-1001, INV-1002, etc.
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+
+  // Dates
+  issueDate       DateTime @default(now())
+  dueDate         DateTime
+  paidDate        DateTime?
+
+  // Financial
+  subtotal        Float
+  taxAmount       Float    @default(0)
+  discountAmount  Float    @default(0)
+  totalAmount     Float
+  paidAmount      Float    @default(0)
+  balanceDue      Float
+
+  // Status
+  status          String   @default("draft") // draft, sent, paid, overdue, cancelled
+
+  // Additional Info
+  notes           String?  @db.Text
+  terms           String?  @db.Text
+  internalNotes   String?  @db.Text
+
+  // PDF
+  pdfUrl          String?
+
+  // Tracking
+  createdById     String
+  createdBy       User     @relation("InvoiceCreator", fields: [createdById], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  items           InvoiceItem[]
+  payments        Payment[]
+
+  @@unique([businessId, invoiceNumber])
+  @@index([businessId])
+  @@index([customerId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+
+  // Item Details
+  description String
+  quantity    Float
+  unitPrice   Float
+  taxRate     Float    @default(0)
+  discountPercent Float @default(0)
+
+  // Calculated
+  amount      Float    // (quantity * unitPrice) - discount + tax
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+// ============================================
+// PAYMENT TRACKING
+// ============================================
+
+model Payment {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  invoiceId       String
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id])
+
+  // Payment Details
+  paymentNumber   String
+  amount          Float
+  paymentDate     DateTime @default(now())
+  paymentMethod   String   // cash, check, credit_card, bank_transfer, paypal, stripe
+
+  // Transaction Info
+  transactionId   String?
+  checkNumber     String?
+  notes           String?  @db.Text
+
+  status          String   @default("completed") // completed, pending, failed, refunded
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([businessId, paymentNumber])
+  @@index([businessId])
+  @@index([invoiceId])
+  @@map("payments")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  otp       String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+// ============================================
+// TEMPLATE MANAGEMENT
+// ============================================
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  fileUrl     String   // S3 URL or file path
+  fileType    String   // html, pdf, docx
+  fileName    String
+  fileSize    Int      // in bytes
+
+  // Visibility control
+  isVisible   Boolean  @default(true) // SuperAdmin can toggle visibility
+
+  // Metadata
+  createdBy   String   // SuperAdmin userId who created
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("templates")
+}
+
+// ============================================
+// LIVE CHAT SYSTEM
+// ============================================
+
+model ChatMessage {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  senderId   String
+  sender     User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  message    String   @db.Text
+  isRead     Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([senderId])
+  @@map("chat_messages")
+}
+
+// ============================================
+// NOTIFICATION SYSTEM
+// ============================================
+
+model Notification {
+  id         String   @id @default(cuid())
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  userId     String?  // If null, it's for SuperAdmin
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title      String
+  message    String   @db.Text
+  type       String   // info, success, warning, error
+  actionUrl  String?  // Optional URL to navigate to
+  isRead     Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+
+  @@index([businessId])
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}

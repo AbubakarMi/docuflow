@@ -18,16 +18,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { InventoryItem } from "./[category]/page";
 
-const initialInventoryItems = [
-    { id: '1', name: 'Jollof Rice', category: 'Food', cost: 500, price: 1500, quantity: 50, imageUrl: 'https://picsum.photos/seed/jollof/200/200' },
-    { id: '2', name: 'Coca-Cola', category: 'Drinks', cost: 100, price: 250, quantity: 100, imageUrl: 'https://picsum.photos/seed/coke/200/200' },
-    { id: '3', name: 'Beef Samosa', category: 'Snacks', cost: 150, price: 400, quantity: 200, imageUrl: 'https://picsum.photos/seed/samosa/200/200' },
-    { id: '4', name: 'Bottle of Water', category: 'Drinks', cost: 50, price: 150, quantity: 150, imageUrl: 'https://picsum.photos/seed/water/200/200' },
-    { id: '5', name: 'Fried Rice', category: 'Food', cost: 500, price: 1500, quantity: 40, imageUrl: 'https://picsum.photos/seed/friedrice/200/200' },
-];
+// No initial inventory items - start with empty inventory
+const initialInventoryItems: InventoryItem[] = [];
 
 export default function InventoryPage() {
-  const [inventoryItems, setInventoryItems] = useState(initialInventoryItems);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(initialInventoryItems);
   
   const isEmpty = inventoryItems.length === 0;
   const emptyInventoryImage = PlaceHolderImages.find(p => p.id === 'inventory-empty');

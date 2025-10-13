@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(if [ -f .env ])",
+      "Bash(then cat .env)",
+      "Bash(else echo \"File does not exist\")",
+      "Bash(fi)",
+      "Bash(npm run:*)",
+      "Bash(psql:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(tail:*)",
+      "Bash(ls:*)",
+      "Bash(if [ ! -d \"public/templates\" ])",
+      "Bash(then mkdir -p \"public/templates\")",
+      "Bash(then grep -i \"resend\" .env)",
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)",
+      "Bash(npx tsc:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
