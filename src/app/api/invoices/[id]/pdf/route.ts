@@ -1,6 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getInvoicePDFBlob } from '@/lib/invoice-pdf'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
+
+async function convertLogoToBase64(logoPath: string): Promise<string | undefined> {
+  try {
+    if (!logoPath) return undefined
+
+    // If it's already a data URL, return it
+    if (logoPath.startsWith('data:')) {
+      return logoPath
+    }
+
+    // Convert relative path to absolute
+    const absolutePath = join(process.cwd(), 'public', logoPath)
+
+    // Read the file
+    const fileBuffer = await readFile(absolutePath)
+
+    // Determine the mime type based on file extension
+    const extension = logoPath.split('.').pop()?.toLowerCase()
+    const mimeTypes: Record<string, string> = {
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'svg': 'image/svg+xml',
+      'webp': 'image/webp'
+    }
+    const mimeType = mimeTypes[extension || 'png'] || 'image/png'
+
+    // Convert to base64
+    const base64 = fileBuffer.toString('base64')
+    return `data:${mimeType};base64,${base64}`
+  } catch (error) {
+    console.error('Error converting logo to base64:', error)
+    return undefined
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -42,6 +79,7 @@ export async function GET(
       businessCity: invoice.business.city || undefined,
       businessState: invoice.business.state || undefined,
       businessCountry: invoice.business.country || undefined,
+      businessLogo: invoice.business.logo || undefined,
 
       // Customer Info
       customerName: invoice.customer.company || invoice.customer.name,
@@ -72,6 +110,11 @@ export async function GET(
       // Optional
       notes: invoice.notes || undefined,
       terms: invoice.terms || undefined
+    }
+
+    // Convert logo to base64 if present
+    if (pdfData.businessLogo) {
+      pdfData.businessLogo = await convertLogoToBase64(pdfData.businessLogo)
     }
 
     // Generate PDF

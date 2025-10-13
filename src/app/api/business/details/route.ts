@@ -59,3 +59,77 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const user = await getUserFromCookie()
+
+    if (!user || !user.businessId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { business: businessData, settings: settingsData } = body
+
+    // Update business information
+    const updatedBusiness = await prisma.business.update({
+      where: { id: user.businessId },
+      data: {
+        name: businessData.name,
+        email: businessData.email,
+        phone: businessData.phone,
+        address: businessData.address,
+        city: businessData.city,
+        state: businessData.state,
+        zipCode: businessData.zipCode,
+        country: businessData.country,
+        taxId: businessData.taxId,
+        website: businessData.website,
+        logo: businessData.logo,
+        currency: businessData.currency,
+        timezone: businessData.timezone,
+      }
+    })
+
+    // Update or create business settings
+    let updatedSettings = null
+    if (settingsData) {
+      updatedSettings = await prisma.businessSettings.upsert({
+        where: { businessId: user.businessId },
+        update: {
+          invoicePrefix: settingsData.invoicePrefix,
+          nextInvoiceNumber: settingsData.nextInvoiceNumber,
+          invoiceTerms: settingsData.invoiceTerms,
+          invoiceNotes: settingsData.invoiceNotes,
+          paymentTermsDays: settingsData.paymentTermsDays,
+          emailFromName: settingsData.emailFromName,
+          emailFromAddress: settingsData.emailFromAddress,
+        },
+        create: {
+          businessId: user.businessId,
+          invoicePrefix: settingsData.invoicePrefix || 'INV',
+          nextInvoiceNumber: settingsData.nextInvoiceNumber || 1001,
+          invoiceTerms: settingsData.invoiceTerms,
+          invoiceNotes: settingsData.invoiceNotes,
+          paymentTermsDays: settingsData.paymentTermsDays || 30,
+          emailFromName: settingsData.emailFromName,
+          emailFromAddress: settingsData.emailFromAddress,
+        }
+      })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Business details updated successfully',
+      business: updatedBusiness,
+      settings: updatedSettings
+    })
+
+  } catch (error) {
+    console.error('Error updating business details:', error)
+    return NextResponse.json(
+      { error: 'Failed to update business details' },
+      { status: 500 }
+    )
+  }
+}

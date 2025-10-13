@@ -48,17 +48,49 @@ interface InvoiceData {
 
 export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const doc = new jsPDF()
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
 
   // Colors
   const primaryColor: [number, number, number] = [59, 130, 246] // Blue
   const darkColor: [number, number, number] = [31, 41, 55] // Dark gray
   const lightGray: [number, number, number] = [243, 244, 246]
 
+  // Add watermark logo in center if available
+  if (data.business.logo) {
+    try {
+      // Calculate center position for watermark
+      const watermarkSize = 120 // Large size for watermark
+      const centerX = (pageWidth - watermarkSize) / 2
+      const centerY = (pageHeight - watermarkSize) / 2
+
+      // Add watermark with transparency
+      doc.setGState(new doc.GState({ opacity: 0.1 }))
+      doc.addImage(data.business.logo, 'PNG', centerX, centerY, watermarkSize, watermarkSize, undefined, 'NONE')
+
+      // Reset opacity for rest of content
+      doc.setGState(new doc.GState({ opacity: 1.0 }))
+    } catch (error) {
+      console.error('Error adding watermark:', error)
+    }
+  }
+
   let y = 20
 
   // Header - Business Info
   doc.setFillColor(...primaryColor)
   doc.rect(0, 0, 210, 40, 'F')
+
+  // Add logo to header if available
+  if (data.business.logo) {
+    try {
+      const logoWidth = 30
+      const logoHeight = 30
+      doc.addImage(data.business.logo, 'PNG', 165, 5, logoWidth, logoHeight, undefined, 'NONE')
+    } catch (error) {
+      console.error('Error adding header logo:', error)
+    }
+  }
 
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(24)

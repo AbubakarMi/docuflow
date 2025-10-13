@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
       currency,
       businessWebsite,
       taxId,
+      logo,
 
       // User Info
       firstName,
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
           country: businessCountry || 'USA',
           taxId,
           website: businessWebsite,
+          logo: logo || null,
           plan: 'business',
           currency: currency || 'NGN',
           timezone: 'Africa/Lagos',

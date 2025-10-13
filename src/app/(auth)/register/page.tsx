@@ -50,6 +50,43 @@ export default function RegisterPage() {
   const [timezone, setTimezone] = useState("America/New_York")
   const [fiscalYearEnd, setFiscalYearEnd] = useState("")
 
+  // Business Logo
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>("")
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp']
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "Error",
+          description: "Invalid file type. Only PNG, JPG, SVG, and WebP are allowed.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "File too large. Maximum size is 5MB.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      setLogoFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSubmit = async () => {
     // Validation
     if (!businessName || !businessEmail || !firstName || !lastName || !email || !password) {
@@ -82,6 +119,24 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      let logoUrl = ""
+
+      // Upload logo if provided
+      if (logoFile) {
+        const formData = new FormData()
+        formData.append('logo', logoFile)
+
+        const uploadResponse = await fetch('/api/auth/upload-logo', {
+          method: 'POST',
+          body: formData,
+        })
+
+        const uploadData = await uploadResponse.json()
+        if (uploadData.success) {
+          logoUrl = uploadData.logoUrl
+        }
+      }
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -92,17 +147,15 @@ export default function RegisterPage() {
           businessName,
           businessEmail,
           businessPhone,
+          businessAddress: address,
+          businessCity: city,
+          businessState: state,
+          businessCountry: country,
+          businessWebsite: website,
+          logo: logoUrl,
           industry,
           businessType,
-          website,
           description,
-
-          // Address
-          address,
-          city,
-          state,
-          zipCode,
-          country,
 
           // Tax & Legal
           taxId,
@@ -206,6 +259,32 @@ export default function RegisterPage() {
             {/* Step 1: Business Information */}
             {step === 1 && (
               <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="logo">Business Logo (Optional)</Label>
+                  <div className="flex items-center gap-4">
+                    {logoPreview && (
+                      <div className="w-20 h-20 border rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
+                        <img
+                          src={logoPreview}
+                          alt="Business Logo Preview"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <Input
+                        id="logo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Upload your business logo (PNG, JPG, SVG recommended, max 5MB)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="businessName">Business Name *</Label>

@@ -22,7 +22,6 @@ import { Camera, ScanLine, Sparkles, Upload, Wand2 } from "lucide-react";
 import Image from "next/image";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { suggestItemDetailsFromImage } from "@/ai/flows/suggest-item-details-from-image";
-import { categorizeItem } from "@/ai/flows/categorize-item";
 
 const itemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -179,14 +178,27 @@ export function AddItemDialog({ children, onAddItem }: AddItemDialogProps) {
 
     setIsCategorizing(true);
     try {
-      const result = await categorizeItem({ itemName });
-
-      form.setValue("category", result.category);
-
-      toast({
-        title: "AI Categorization Complete",
-        description: `Suggested category: ${result.category} (${result.confidence} confidence)`,
+      const response = await fetch('/api/ai/categorize-item', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ itemName }),
       });
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        const result = data.data;
+        form.setValue("category", result.category);
+
+        toast({
+          title: "AI Categorization Complete",
+          description: `Suggested category: ${result.category} (${result.confidence} confidence)`,
+        });
+      } else {
+        throw new Error('Failed to categorize');
+      }
     } catch (error) {
       console.error("Categorization error:", error);
       toast({

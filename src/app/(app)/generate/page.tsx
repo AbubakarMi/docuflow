@@ -230,6 +230,7 @@ function GeneratePageContent() {
       businessCity: businessDetails?.city || '',
       businessState: businessDetails?.state || '',
       businessCountry: businessDetails?.country || 'Nigeria',
+      businessLogo: businessDetails?.logo || undefined,
 
       // Customer information
       customerName: values.toName || 'Customer Name',

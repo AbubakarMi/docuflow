@@ -18,6 +18,7 @@ interface InvoicePreviewProps {
     businessCity?: string
     businessState?: string
     businessCountry?: string
+    businessLogo?: string
     customerName: string
     customerEmail: string
     customerPhone?: string
@@ -58,16 +59,36 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
           <DialogTitle className="text-lg sm:text-xl">Invoice Preview</DialogTitle>
         </DialogHeader>
 
-        <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg border">
+        <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg border relative">
+          {/* Watermark Logo */}
+          {data.businessLogo && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <img
+                src={data.businessLogo}
+                alt="Business Logo Watermark"
+                className="w-64 h-64 object-contain opacity-5"
+              />
+            </div>
+          )}
+
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0 mb-6 sm:mb-8">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-2 break-words">{data.businessName}</h1>
-              <div className="text-xs sm:text-sm text-slate-600 space-y-1">
-                {data.businessEmail && <p className="break-all">{data.businessEmail}</p>}
-                {data.businessPhone && <p>{data.businessPhone}</p>}
-                {data.businessAddress && <p>{data.businessAddress}</p>}
-                {businessLocation && <p>{businessLocation}</p>}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0 mb-6 sm:mb-8 relative z-10">
+            <div className="flex items-start gap-4">
+              {data.businessLogo && (
+                <img
+                  src={data.businessLogo}
+                  alt="Business Logo"
+                  className="w-16 h-16 object-contain flex-shrink-0"
+                />
+              )}
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-2 break-words">{data.businessName}</h1>
+                <div className="text-xs sm:text-sm text-slate-600 space-y-1">
+                  {data.businessEmail && <p className="break-all">{data.businessEmail}</p>}
+                  {data.businessPhone && <p>{data.businessPhone}</p>}
+                  {data.businessAddress && <p>{data.businessAddress}</p>}
+                  {businessLocation && <p>{businessLocation}</p>}
+                </div>
               </div>
             </div>
             <div className="sm:text-right">
@@ -100,7 +121,7 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
           </div>
 
           {/* Bill To */}
-          <div className="bg-slate-50 p-6 rounded-lg mb-8">
+          <div className="bg-slate-50 p-6 rounded-lg mb-8 relative z-10">
             <p className="text-sm font-bold text-indigo-600 mb-3">BILL TO:</p>
             <p className="font-bold text-slate-700 mb-1">{data.customerName}</p>
             <div className="text-sm text-slate-600 space-y-1">
@@ -112,7 +133,7 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
           </div>
 
           {/* Items Table */}
-          <div className="mb-6 sm:mb-8 overflow-x-auto">
+          <div className="mb-6 sm:mb-8 overflow-x-auto relative z-10">
             <table className="w-full min-w-[500px]">
               <thead>
                 <tr className="bg-indigo-600 text-white">
@@ -141,7 +162,7 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
           </div>
 
           {/* Totals */}
-          <div className="flex justify-end mb-6 sm:mb-8">
+          <div className="flex justify-end mb-6 sm:mb-8 relative z-10">
             <div className="w-full sm:w-80 space-y-2">
               <div className="flex justify-between py-2 text-xs sm:text-sm">
                 <span className="text-slate-600">Subtotal:</span>
@@ -168,7 +189,7 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
 
           {/* Notes */}
           {data.notes && (
-            <div className="mb-6">
+            <div className="mb-6 relative z-10">
               <p className="font-bold text-slate-700 mb-2">Notes:</p>
               <p className="text-sm text-slate-600 whitespace-pre-wrap">{data.notes}</p>
             </div>
@@ -176,14 +197,14 @@ export function InvoicePreview({ open, onOpenChange, data }: InvoicePreviewProps
 
           {/* Terms */}
           {data.terms && (
-            <div className="mb-6">
+            <div className="mb-6 relative z-10">
               <p className="font-bold text-slate-700 mb-2">Terms & Conditions:</p>
               <p className="text-sm text-slate-600 whitespace-pre-wrap">{data.terms}</p>
             </div>
           )}
 
           {/* Footer */}
-          <div className="text-center text-xs text-slate-400 pt-6 border-t">
+          <div className="text-center text-xs text-slate-400 pt-6 border-t relative z-10">
             Generated by DocuFlow on {new Date().toLocaleDateString()}
           </div>
         </div>
