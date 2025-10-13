@@ -6,9 +6,9 @@ const resend = new Resend(process.env.RESEND_API_KEY || 're_X22GgK6r_LV8dW6yS54e
 export async function sendRegistrationPendingEmail(to: string, businessName: string, adminName: string) {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'DocuFlow <onboarding@resend.dev>',
+      from: 'Invotrek <onboarding@resend.dev>',
       to: [to],
-      subject: 'Registration Pending - DocuFlow',
+      subject: 'Registration Pending - Invotrek',
       html: `
         <!DOCTYPE html>
         <html>
@@ -19,7 +19,7 @@ export async function sendRegistrationPendingEmail(to: string, businessName: str
           </head>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">DocuFlow</h1>
+              <h1 style="color: white; margin: 0; font-size: 28px;">Invotrek</h1>
             </div>
 
             <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -27,7 +27,7 @@ export async function sendRegistrationPendingEmail(to: string, businessName: str
 
               <p style="font-size: 16px;">Dear ${adminName},</p>
 
-              <p style="font-size: 16px;">Thank you for registering <strong>${businessName}</strong> with DocuFlow.</p>
+              <p style="font-size: 16px;">Thank you for registering <strong>${businessName}</strong> with Invotrek.</p>
 
               <div style="background: white; border-left: 4px solid #4f46e5; padding: 20px; margin: 20px 0; border-radius: 4px;">
                 <p style="margin: 0; font-size: 16px;">
@@ -42,12 +42,12 @@ export async function sendRegistrationPendingEmail(to: string, businessName: str
 
               <p style="font-size: 16px; margin-top: 30px;">
                 Best regards,<br>
-                <strong>The DocuFlow Team</strong>
+                <strong>The Invotrek Team</strong>
               </p>
             </div>
 
             <div style="text-align: center; margin-top: 20px; padding: 20px; color: #666; font-size: 12px;">
-              <p>&copy; ${new Date().getFullYear()} DocuFlow. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} Invotrek. All rights reserved.</p>
             </div>
           </body>
         </html>
@@ -69,9 +69,9 @@ export async function sendRegistrationPendingEmail(to: string, businessName: str
 export async function sendApprovalEmail(to: string, businessName: string, adminName: string) {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'DocuFlow <onboarding@resend.dev>',
+      from: 'Invotrek <onboarding@resend.dev>',
       to: [to],
-      subject: 'Account Approved - Welcome to DocuFlow!',
+      subject: 'Account Approved - Welcome to Invotrek!',
       html: `
         <!DOCTYPE html>
         <html>
@@ -82,12 +82,12 @@ export async function sendApprovalEmail(to: string, businessName: string, adminN
           </head>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">DocuFlow</h1>
+              <h1 style="color: white; margin: 0; font-size: 28px;">Invotrek</h1>
               <p style="color: white; margin: 10px 0 0 0; font-size: 18px;">Account Approved! 🎉</p>
             </div>
 
             <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
-              <h2 style="color: #10b981; margin-top: 0;">Welcome to DocuFlow!</h2>
+              <h2 style="color: #10b981; margin-top: 0;">Welcome to Invotrek!</h2>
 
               <p style="font-size: 16px;">Dear ${adminName},</p>
 
@@ -95,7 +95,7 @@ export async function sendApprovalEmail(to: string, businessName: string, adminN
 
               <div style="background: white; border-left: 4px solid #10b981; padding: 20px; margin: 20px 0; border-radius: 4px;">
                 <p style="margin: 0; font-size: 16px;">
-                  <strong>You can now sign in and start using DocuFlow!</strong>
+                  <strong>You can now sign in and start using Invotrek!</strong>
                 </p>
               </div>
 
@@ -120,12 +120,12 @@ export async function sendApprovalEmail(to: string, businessName: string, adminN
 
               <p style="font-size: 16px; margin-top: 30px;">
                 Best regards,<br>
-                <strong>The DocuFlow Team</strong>
+                <strong>The Invotrek Team</strong>
               </p>
             </div>
 
             <div style="text-align: center; margin-top: 20px; padding: 20px; color: #666; font-size: 12px;">
-              <p>&copy; ${new Date().getFullYear()} DocuFlow. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} Invotrek. All rights reserved.</p>
             </div>
           </body>
         </html>
@@ -147,9 +147,9 @@ export async function sendApprovalEmail(to: string, businessName: string, adminN
 export async function sendPasswordResetOTP(to: string, otp: string, userName: string) {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'DocuFlow <security@resend.dev>',
+      from: 'Invotrek <security@resend.dev>',
       to: [to],
-      subject: 'Password Reset OTP - DocuFlow',
+      subject: 'Password Reset OTP - Invotrek',
       html: `
         <!DOCTYPE html>
         <html>
@@ -160,7 +160,7 @@ export async function sendPasswordResetOTP(to: string, otp: string, userName: st
           </head>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">DocuFlow</h1>
+              <h1 style="color: white; margin: 0; font-size: 28px;">Invotrek</h1>
             </div>
 
             <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -185,12 +185,12 @@ export async function sendPasswordResetOTP(to: string, otp: string, userName: st
 
               <p style="font-size: 16px; margin-top: 30px;">
                 Best regards,<br>
-                <strong>The DocuFlow Team</strong>
+                <strong>The Invotrek Team</strong>
               </p>
             </div>
 
             <div style="text-align: center; margin-top: 20px; padding: 20px; color: #666; font-size: 12px;">
-              <p>&copy; ${new Date().getFullYear()} DocuFlow. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} Invotrek. All rights reserved.</p>
             </div>
           </body>
         </html>

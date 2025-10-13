@@ -112,7 +112,7 @@ export default function LandingPage() {
 
             <p className="mb-10 text-xl leading-8 text-slate-600">
               Generate, manage, and automate thousands of documents with AI.
-              Join 50,000+ teams who trust DocuFlow for their document needs.
+              Join 50,000+ teams who trust Invotrek for their document needs.
             </p>
 
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -215,7 +215,7 @@ export default function LandingPage() {
               Ready to get started?
             </h2>
             <p className="mb-10 text-xl leading-8 text-indigo-100">
-              Join thousands of teams already using DocuFlow. Start your free trial today.
+              Join thousands of teams already using Invotrek. Start your free trial today.
             </p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link href="/signup">
@@ -311,7 +311,7 @@ export default function LandingPage() {
 
           <div className="mt-12 border-t pt-8 text-center">
             <p className="text-sm text-slate-600">
-              &copy; 2025 DocuFlow. All rights reserved.
+              &copy; 2025 Invotrek. All rights reserved.
             </p>
           </div>
         </div>

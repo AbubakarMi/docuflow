@@ -191,7 +191,7 @@ export default function LoginPage() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-white px-2 text-slate-500">
-            New to DocuFlow?
+            New to Invotrek?
           </span>
         </div>
       </div>

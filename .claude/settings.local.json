@@ -18,7 +18,8 @@
       "Bash(then grep -i \"resend\" .env)",
       "Bash(taskkill:*)",
       "Bash(timeout:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

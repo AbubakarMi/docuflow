@@ -84,7 +84,7 @@ export default function AuthLayout({
 
               <div className="pt-8 border-t border-slate-200">
                 <p className="text-sm text-slate-500">
-                  Join businesses already using DocuFlow for their operations
+                  Join businesses already using Invotrek for their operations
                 </p>
               </div>
             </div>

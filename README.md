@@ -1,4 +1,4 @@
-# 🧾 DocuFlow - Enterprise Multi-Tenant Invoice + Inventory System
+# 🧾 Invotrek - Enterprise Multi-Tenant Invoice + Inventory System
 
 > **Production-ready invoice and inventory management platform** with automatic stock deduction, complete multi-tenancy, super admin oversight, and enterprise-grade security.
 
@@ -11,7 +11,7 @@
 
 ## 🌟 Overview
 
-DocuFlow is a **complete SaaS platform** for invoice and inventory management with:
+Invotrek is a **complete SaaS platform** for invoice and inventory management with:
 - ✅ **Multi-Tenancy**: Unlimited businesses in one database
 - ✅ **Auto Inventory**: Stock deducts automatically when invoices are created
 - ✅ **Super Admin**: System-wide oversight and management
@@ -121,7 +121,7 @@ npm run create:superadmin  # Create SuperAdmin account
 
 ## 🎉 Summary
 
-DocuFlow is a **complete, production-ready SaaS platform** featuring:
+Invotrek is a **complete, production-ready SaaS platform** featuring:
 
 ✅ **Automatic inventory management** - Stock deducts on invoice creation
 ✅ Multi-tenant architecture (2 roles: Business Admin + Super Admin)
@@ -144,4 +144,4 @@ Visit `http://localhost:9002/register` to start!
 
 ---
 
-**Built with ❤️ for modern businesses** - *Transform your invoicing process with DocuFlow* 💼✨
+**Built with ❤️ for modern businesses** - *Transform your invoicing process with Invotrek* 💼✨

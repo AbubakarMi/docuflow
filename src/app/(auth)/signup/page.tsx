@@ -186,7 +186,7 @@ export default function SignupPage() {
           Register Your Business
         </h1>
         <p className="text-lg text-slate-600">
-          Join DocuFlow and start managing your invoices and inventory
+          Join Invotrek and start managing your invoices and inventory
         </p>
       </div>
 

@@ -215,7 +215,7 @@ export default function RegisterPage() {
             </Button>
           </Link>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Register Your Business</h1>
-          <p className="text-gray-600">Join DocuFlow and start managing your invoices professionally</p>
+          <p className="text-gray-600">Join Invotrek and start managing your invoices professionally</p>
         </div>
 
         {/* Progress Steps */}

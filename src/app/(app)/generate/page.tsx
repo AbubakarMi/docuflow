@@ -26,7 +26,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { generateInvoiceFromText } from "@/ai/flows/generate-invoice-from-text";
 import { useSearchParams } from "next/navigation";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { ExportConfirmationDialog } from "@/components/export-confirmation-dialog";
@@ -170,8 +169,22 @@ function GeneratePageContent() {
     if (!aiPrompt) return;
     setIsGenerating(true);
     try {
-      const result = await generateInvoiceFromText({ prompt: aiPrompt });
-      
+      const response = await fetch('/api/ai/generate-invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success || !data.data) {
+        throw new Error(data.error || 'Failed to generate invoice');
+      }
+
+      const result = data.data;
+
       form.setValue("toName", result.clientName || "");
       form.setValue("toAddress", result.clientAddress || "");
       if(result.invoiceNumber) form.setValue("invoiceNumber", result.invoiceNumber);
@@ -194,6 +207,7 @@ function GeneratePageContent() {
       });
 
     } catch (error) {
+      console.error('AI generation error:', error);
       toast({
         variant: "destructive",
         title: "AI Generation Failed",

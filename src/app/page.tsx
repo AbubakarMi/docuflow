@@ -231,7 +231,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              Why Choose DocuFlow?
+              Why Choose Invotrek?
             </h2>
             <p className="mt-4 text-lg text-slate-600">
               Built specifically for businesses that need reliable invoice and inventory management
@@ -307,7 +307,7 @@ export default function LandingPage() {
               Ready to Transform Your Business?
             </h2>
             <p className="mt-6 text-lg leading-8 text-indigo-100">
-              Join businesses already using DocuFlow for their invoicing and inventory management needs.
+              Join businesses already using Invotrek for their invoicing and inventory management needs.
               Start free today - no credit card required.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
@@ -380,7 +380,7 @@ export default function LandingPage() {
 
           <div className="mt-16 border-t pt-10">
             <p className="text-center text-base text-slate-700 font-medium">
-              &copy; {new Date().getFullYear()} DocuFlow. All rights reserved.
+              &copy; {new Date().getFullYear()} Invotrek. All rights reserved.
             </p>
           </div>
         </div>
