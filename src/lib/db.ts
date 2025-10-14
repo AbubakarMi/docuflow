@@ -4,9 +4,22 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+// During build time, DATABASE_URL might not be available
+// We create a conditional client that won't fail during build
+const createPrismaClient = () => {
+  // If DATABASE_URL is not set (e.g., during build), return a mock client
+  if (!process.env.DATABASE_URL) {
+    console.warn('DATABASE_URL not found - using build-time mock Prisma client')
+    return new PrismaClient({
+      datasources: {
+        db: {
+          url: 'postgresql://localhost:5432/placeholder?schema=public'
+        }
+      }
+    })
+  }
+
+  return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     // Connection pool settings for multi-tenant concurrent requests
     datasources: {
@@ -15,6 +28,9 @@ export const prisma =
       }
     }
   })
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 

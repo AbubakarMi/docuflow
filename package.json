@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
-    "build": "NODE_ENV=production next build",
+    "build": "prisma generate && NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -16,7 +16,8 @@
     "db:studio": "prisma studio",
     "create:superadmin": "tsx scripts/create-superadmin.ts",
     "migrate:inventory": "tsx scripts/migrate-inventory-system.ts",
-    "setup:approval": "tsx scripts/setup-approval-system.ts"
+    "setup:approval": "tsx scripts/setup-approval-system.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
