@@ -7,7 +7,7 @@ export function Logo() {
         <Feather className="h-5 w-5 text-primary" />
       </div>
       <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent group-data-[collapsible=icon]:hidden">
-        Docuflow
+        InvoTrek
       </h1>
     </div>
   );

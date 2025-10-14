@@ -93,8 +93,8 @@ export default function AdminSettingsPage() {
                 <Label htmlFor="site-name">Site Name</Label>
                 <Input
                   id="site-name"
-                  placeholder="Docuflow"
-                  defaultValue="Docuflow"
+                  placeholder="InvoTrek"
+                  defaultValue="InvoTrek"
                 />
               </div>
               <div className="space-y-2">
@@ -110,8 +110,8 @@ export default function AdminSettingsPage() {
                 <Input
                   id="contact-email"
                   type="email"
-                  placeholder="support@docuflow.com"
-                  defaultValue="support@docuflow.com"
+                  placeholder="support@invotrek.com"
+                  defaultValue="support@invotrek.com"
                 />
               </div>
               <div className="space-y-2">
@@ -272,16 +272,16 @@ export default function AdminSettingsPage() {
                 <Input
                   id="from-email"
                   type="email"
-                  placeholder="noreply@docuflow.com"
-                  defaultValue="noreply@docuflow.com"
+                  placeholder="noreply@invotrek.com"
+                  defaultValue="noreply@invotrek.com"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="from-name">From Name</Label>
                 <Input
                   id="from-name"
-                  placeholder="Docuflow"
-                  defaultValue="Docuflow"
+                  placeholder="InvoTrek"
+                  defaultValue="InvoTrek"
                 />
               </div>
               <Separator />
@@ -401,7 +401,7 @@ export default function AdminSettingsPage() {
                 <Textarea
                   id="admin-emails"
                   placeholder="admin1@example.com, admin2@example.com"
-                  defaultValue="admin@docuflow.com"
+                  defaultValue="admin@invotrek.com"
                 />
                 <p className="text-xs text-muted-foreground">
                   Comma-separated list of admin emails
@@ -458,7 +458,7 @@ export default function AdminSettingsPage() {
                 <div className="space-y-0.5">
                   <Label>Show System Branding</Label>
                   <p className="text-sm text-muted-foreground">
-                    Display Docuflow branding in footer
+                    Display InvoTrek branding in footer
                   </p>
                 </div>
                 <Switch defaultChecked />

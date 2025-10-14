@@ -89,7 +89,7 @@ const auditLogs = [
   {
     id: 4,
     user: "System",
-    email: "system@docuflow.com",
+    email: "system@invotrek.com",
     action: "Database backup completed",
     resource: "Database: production",
     type: "system",
@@ -128,7 +128,7 @@ const auditLogs = [
   {
     id: 7,
     user: "Admin",
-    email: "admin@docuflow.com",
+    email: "admin@invotrek.com",
     action: "Changed system settings",
     resource: "Settings: Security",
     type: "update",

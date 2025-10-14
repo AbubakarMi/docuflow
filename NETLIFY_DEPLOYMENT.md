@@ -1,7 +1,7 @@
-# Netlify Deployment Guide for DocuFlow
+# Netlify Deployment Guide for InvoTrek
 
 ## Overview
-This guide explains how to deploy DocuFlow to Netlify with proper Prisma database configuration.
+This guide explains how to deploy InvoTrek to Netlify with proper Prisma database configuration.
 
 ## Recent Fixes Applied
 

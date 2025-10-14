@@ -96,7 +96,7 @@ export default function InventoryPage() {
                 <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-24">
                   <div className="flex flex-col items-center gap-2 text-center">
                     <Image 
-                      src={emptyInventoryImage?.imageUrl || "https://picsum.photos/seed/docuflow-empty-inventory/400/300"}
+                      src={emptyInventoryImage?.imageUrl || "https://picsum.photos/seed/invotrek-empty-inventory/400/300"}
                       width={400}
                       height={300}
                       alt={emptyInventoryImage?.description || "Empty inventory"}

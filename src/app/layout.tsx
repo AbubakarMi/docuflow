@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Docuflow',
-  description: 'Document automation for small and medium businesses.',
+  title: 'InvoTrek',
+  description: 'Invoice and inventory management for small and medium businesses.',
 };
 
 export default function RootLayout({
